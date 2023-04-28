@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>الخريطة التفاعلية</title>
+    
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@500&display=swap');
+        a {
+            font-family: 'IBM Plex Sans Arabic', sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #EBEBEB;
+
+            padding-top: 60px;
+            padding-bottom: 40px;
+        }
+
+        /* Button CSS */
+            button {
+                background: transparent;
+                border-color: transparent;
+
+                color: white;
+            }
+
+            .svg-button:hover {
+                color: #ffffffb0;
+                cursor: pointer;
+            }
+
+
+        /* Header & Footer */
+            .header, .footer {
+                position: fixed;
+                padding: 10px 0;
+                width: 100%;
+
+                background-color: #2E4B58;
+            }
+
+
+            .header {
+                top: 0;
+                border-radius: 0 0 15px 15px;
+
+            }
+
+            .footer {
+                bottom: 0;
+                border-radius: 15px 15px 0 0;
+                
+            }
+
+
+        /* Header elements */
+            .header-items {
+                float: right;
+                padding-right: 10px;
+                right: 0%;
+
+            }
+        
+        /* Footer elements */
+            .footer-alignment {
+                width: 100%;
+                margin: 0 auto;
+            }
+
+            .footer-item {
+                display: flex;
+                flex-direction: row;
+                justify-content: center;
+                gap: 10px;
+
+                text-align: center;
+            }
+
+
+            .footer-item > a {
+                color: white;
+            }
+
+
+        /* Above map */
+            .above-map {
+                padding-top: 10px;
+                padding-right: 10px;
+            }
+
+            
+        /* Map Container */
+            .map-container {
+                width: 90%;
+                height: 500px;
+
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .map-container > input[type=text] {
+                direction: rtl;
+
+                width: 100%;
+                height: 30px;
+
+                background-image: url('https://cdn1.iconfinder.com/data/icons/hawcons/32/698627-icon-111-search-512.png');
+                background-repeat: no-repeat;
+                background-position: right center;
+                background-size: 30px;
+
+                border: 1px solid;
+                border-radius: 5px;
+
+                font-size: 15px;
+                padding-right: 30px;
+            }
+
+            .map-elements {
+                width: 100%;
+                height: 100%;
+
+
+                border: 1px solid;
+                background-color: white;
+            }
+
+        /* Bottom map */
+            .bottom-map {
+                position: absolute;
+                bottom: 15%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+            }
+
+        /* Dropdown menu */
+            .select-menu .select-btn {
+                display: flex;
+                height: 40px;
+
+                background: #fff;
+                padding: 10px;
+                font-size: 18px;
+
+
+                border-radius: 1px;
+
+                align-items: center;
+                cursor: pointer;
+                justify-content: space-between;
+                box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+            }
+            .select-menu .options {
+                position: absolute;
+                width: 120px;
+
+
+                overflow-y: auto;
+                scrollbar-width: thin;
+
+                max-height: 80px;
+                margin-top: 5px;
+                border-radius: 8px;
+                background: #fff;
+                box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+
+                animation-name: fadeInDown;
+                -webkit-animation-name: fadeInDown;
+                animation-duration: 0.35s;
+                animation-fill-mode: both;
+                -webkit-animation-duration: 0.35s;
+                -webkit-animation-fill-mode: both;
+            }
+
+            .select-menu .options .option {
+                display: flex;
+                height: 35px;
+                cursor: pointer;
+                padding: 0 16px;
+                border-radius: 8px;
+                align-items: center;
+                background: #fff;
+            }
+            .select-menu .options .option:hover {
+                background: #f2f2f2;
+            }
+            .select-menu .options .option i {
+                font-size: 25px;
+                margin-right: 12px;
+            }
+            .select-menu .options .option .option-text {
+                font-size: 18px;
+                color: #333;
+            }
+
+            .select-btn svg {
+                font-size: 25px;
+                transition: 0.3s;
+            }
+
+            .select-menu.active .select-btn svg {
+                transform: rotate(-180deg);
+            }
+
+            .select-menu.active .options {
+                display: block;
+                opacity: 0;
+                z-index: 10;
+                animation-name: fadeInUp;
+                -webkit-animation-name: fadeInUp;
+                animation-duration: 0.4s;
+                animation-fill-mode: both;
+                -webkit-animation-duration: 0.4s;
+                -webkit-animation-fill-mode: both;
+            }
+
+            @keyframes fadeInUp {
+                from {
+                    transform: translate3d(0, 30px, 0);
+                }
+                to {
+                    transform: translate3d(0, 0, 0);
+                    opacity: 1;
+                }
+            }
+            @keyframes fadeInDown {
+                from {
+                    transform: translate3d(0, 0, 0);
+                    opacity: 1;
+                }
+                to {
+                    transform: translate3d(0, 20px, 0);
+                    opacity: 0;
+                }
+            }
+    </style>
+
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="header-items">
+            
+            <button type="button">
+                <svg class="svg-button" xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" class="bi bi-list" viewBox="0 0 16 16"> <path fill-rule="evenodd" d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5z"/> </svg> 
+            </button>
+        </div>
+    </div>
+
+    <div class="above-map" style="direction: rtl;">
+        <a>مرحبًا بك!<br>في الخريطة التفاعلية لقسم كلية علوم الحاسب</a>
+    </div>
+
+    <!-- Map container-->
+    <div class="map-container">
+        <input type="text" placeholder="البحث عن مكتب">
+
+        <div class="map-elements">
+
+        </div>
+    </div>
+
+    <div class="bottom-map">
+        <div class="select-menu">
+            <div class="select-btn">
+              <span class="sBtn-text">الطابق الأول</span>
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M16.293 9.293L12 13.586L7.707 9.293l-1.414 1.414L12 16.414l5.707-5.707z"/></svg>
+            </div>
+          
+            <ul class="options">
+              <li class="option">
+                <span class="option-text">الطابق الأول</span>
+              </li>
+              <li class="option">
+                <span class="option-text">الطابق الثاني</span>
+              </li>
+              <li class="option">
+                <span class="option-text">الطابق الثالث</span>
+              </li>
+              <li class="option">
+                <span class="option-text">الطابق الرابع</span>
+              </li>
+            </ul>
+          </div>
+    </div>
+
+
+    <!-- Footer -->
+    <div class="footer">
+        <div class="footer-alignment" style="direction: rtl;">
+
+            <div class="footer-item">
+                <svg style="color: white" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 512 512"> <path d="M256 0C114.6 0 0 114.6 0 256s114.6 256 256 256s256-114.6 256-256S397.4 0 256 0zM256 128c39.77 0 72 32.24 72 72S295.8 272 256 272c-39.76 0-72-32.24-72-72S216.2 128 256 128zM256 448c-52.93 0-100.9-21.53-135.7-56.29C136.5 349.9 176.5 320 224 320h64c47.54 0 87.54 29.88 103.7 71.71C356.9 426.5 308.9 448 256 448z" fill="white"></svg>
+                <a>جميع الحقوق محفوظة لجامعة الإمام محمد بن سعود<br>الإسلامية</a>                
+            </div>
+        </div>
+    </div>
+</body>
+
+<script>
+    // Dropdown menu
+    const optionMenu = document.querySelector(".select-menu"),
+        selectBtn = optionMenu.querySelector(".select-btn"),
+        options = optionMenu.querySelectorAll(".option"),
+        sBtn_text = optionMenu.querySelector(".sBtn-text");
+
+    selectBtn.addEventListener("click", () =>
+        optionMenu.classList.toggle("active")
+    );
+
+    options.forEach((option) => {
+        option.addEventListener("click", () => {
+            let selectedOption = option.querySelector(".option-text").innerText;
+            sBtn_text.innerText = selectedOption;
+
+            optionMenu.classList.remove("active");
+        });
+    });
+</script>
+
+</html>

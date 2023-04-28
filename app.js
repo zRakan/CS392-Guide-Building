@@ -20,7 +20,7 @@ const maintenance = process.env.MAINTENANCE == "true"
 app.engine('html', ejs.renderFile);
 
 app.get('/', function(req, res) {
-    res.render(maintenance ? "maintenance.html" : "test");
+    res.render(maintenance ? "maintenance.html" : "index.html");
 })
 
 app.get("*", function(req, res) {

@@ -91,13 +91,6 @@
                 color: white;
             }
 
-
-        /* Above map */
-            .above-map {
-                padding-top: 10px;
-                padding-right: 10px;
-            }
-
             
         /* Map Container */
             .map-container {
@@ -105,20 +98,36 @@
                 height: 500px;
 
                 position: absolute;
-                top: 50%;
+                top: 30%;
                 left: 50%;
-                transform: translate(-50%, -50%);
+                transform: translate(-50%, -30%);
 
                 display: flex;
                 flex-direction: column;
+                align-items: center;
                 gap: 10px;
+            }
+
+            @media screen and ( max-height: 768px ) {
+                .map-container {
+                    top: 40%;
+                    transform: translate(-50%, -40%);
+                }
+            }
+
+            .map-container a {
+                direction: rtl;
+                align-self: left;
+                width: 100%;
+
+                padding-bottom: 30px;
             }
 
             .map-container > input[type=text] {
                 direction: rtl;
 
                 width: 100%;
-                height: 30px;
+                height: 40px;
 
                 background-image: url('https://cdn1.iconfinder.com/data/icons/hawcons/32/698627-icon-111-search-512.png');
                 background-repeat: no-repeat;
@@ -141,18 +150,19 @@
                 background-color: white;
             }
 
-        /* Bottom map */
-            .bottom-map {
-                position: absolute;
-                bottom: 15%;
-                left: 50%;
-                transform: translate(-50%, -50%);
+            @media screen and ( max-height: 768px ) {
+                .map-elements {
+                    height: 50%;
+                }
             }
 
         /* Dropdown menu */
             .select-menu .select-btn {
                 display: flex;
                 height: 40px;
+                width: 100%;
+
+                align-self: center;
 
                 background: #fff;
                 padding: 10px;
@@ -263,20 +273,17 @@
         </div>
     </div>
 
-    <div class="above-map" style="direction: rtl;">
-        <a>مرحبًا بك!<br>في الخريطة التفاعلية لقسم كلية علوم الحاسب</a>
-    </div>
-
     <!-- Map container-->
     <div class="map-container">
+
+        <a>مرحبًا بك!<br>في الخريطة التفاعلية لقسم كلية علوم الحاسب</a>
+
         <input type="text" placeholder="البحث عن مكتب">
 
         <div class="map-elements">
 
         </div>
-    </div>
 
-    <div class="bottom-map">
         <div class="select-menu">
             <div class="select-btn">
               <span class="sBtn-text">الطابق الأول</span>

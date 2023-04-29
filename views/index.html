@@ -108,6 +108,12 @@
                 gap: 10px;
             }
 
+            @media screen and ( min-width: 900px ) {
+                .map-container{ 
+                    width: 20%;
+                }
+            }
+
             @media screen and ( max-height: 768px ) {
                 .map-container {
                     top: 40%;
@@ -229,7 +235,7 @@
                 overflow-y: auto;
                 scrollbar-width: thin;
 
-                max-height: 80px;
+                max-height: 110px;
                 margin-top: 5px;
                 border-radius: 8px;
                 background: #fff;
@@ -241,6 +247,12 @@
                 animation-fill-mode: both;
                 -webkit-animation-duration: 0.35s;
                 -webkit-animation-fill-mode: both;
+            }
+
+            @media screen and ( max-height: 768px ) {
+                .select-menu .options {
+                    max-height: 80px;
+                }
             }
 
             .select-menu .options .option {
@@ -294,6 +306,7 @@
                     opacity: 1;
                 }
             }
+
             @keyframes fadeInDown {
                 from {
                     transform: translate3d(0, 0, 0);
@@ -304,23 +317,115 @@
                     opacity: 0;
                 }
             }
+
+
+
+        /* Loading screen */
+            .loading-screen {
+                position:fixed;
+                
+                height: 100%;
+                width: 100%;
+
+                margin: 0;
+                top: 0;
+
+                transition: height 1s ease-in-out;
+                    -webkit-transition: height 1s ease-in-out;
+                    -moz-transition: height 1s ease-in-out;
+                    -o-transition: height 1s ease-in-out;
+
+                background-color: #2E4B58;
+            }
+
+            #loading-logo {
+                display:flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+
+                height: 100%;
+
+                text-align: center;
+
+                opacity: 1;
+                transition: opacity 0.5s;
+            }
+
+            .loading-screen-active {
+                width: 0;
+            }
+
+            .loader, .loader:before, .loader:after {
+                background: #ffffff;
+                -webkit-animation: load1 1s infinite ease-in-out;
+                animation: load1 1s infinite ease-in-out;
+                width: 1em;
+                height: 4em;
+            }
+
+            .loader {
+                position: relative;
+                color: white;
+                font-size: 8px;
+
+                transform: translateZ(0);
+                    -webkit-transform: translateZ(0);
+                    -ms-transform: translateZ(0);
+                    -webkit-animation-delay: -0.16s;
+                    
+                animation-delay: -0.16s;
+            }
+
+            .loader:before, .loader:after {
+                position: absolute;
+                
+                top: 0;
+                content: '';
+            }
+
+            .loader:before {
+                left: -1.5em;
+                -webkit-animation-delay: -0.32s;
+                animation-delay: -0.32s;
+            }
+
+            .loader:after {
+                left: 1.5em;
+            }
+
+            @-webkit-keyframes load1 {
+                0%, 80%, 100% {
+                    box-shadow: 0 0;
+                    height: 4em;
+                }
+
+                40% {
+                    box-shadow: 0 -2em;
+                    height: 5em;
+                }
+            }
+
+            @keyframes load1 {
+                0%, 80%, 100% {
+                    box-shadow: 0 0;
+                    height: 4em;
+                }
+                
+                40% {
+                    box-shadow: 0 -2em;
+                    height: 5em;
+                }
+            }
+        /* Loading screen */
+
+
     </style>
 
 </head>
 <body>
-    <!-- Header -->
-    <div class="header">
-        <div class="header-items">
-            
-            <button type="button">
-                <svg class="svg-button" xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" class="bi bi-list" viewBox="0 0 16 16"> <path fill-rule="evenodd" d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5z"/> </svg> 
-            </button>
-        </div>
-    </div>
-
     <!-- Map container-->
     <div class="map-container">
-
         <a>مرحبًا بك!<br>في الخريطة التفاعلية لقسم كلية علوم الحاسب</a>
 
         <input type="text" placeholder="البحث عن مكتب">
@@ -357,6 +462,15 @@
           </div>
     </div>
 
+    <!-- Header -->
+        <div class="header">
+            <div class="header-items">
+                
+                <button type="button">
+                    <svg class="svg-button" xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" class="bi bi-list" viewBox="0 0 16 16"> <path fill-rule="evenodd" d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5z"/> </svg> 
+                </button>
+            </div>
+        </div>
 
     <!-- Footer -->
     <div class="footer">
@@ -368,7 +482,18 @@
             </div>
         </div>
     </div>
+
+
+    <div class="loading-screen">
+        <div id="loading-logo">
+            <div class="loader"></div>
+            <a style="direction: rtl; color: white; font-size: 18px;">يتم تحميل الصفحة...</a>
+        </div>
+    </div>
 </body>
+
+
+
 
 <script>
     // Offices creation
@@ -450,6 +575,20 @@
             optionMenu.classList.remove("active");
         });
     });
+
+    // Loading screen
+        setTimeout(function() {
+            let elem = document.querySelector(".loading-screen");
+            
+            document.getElementById("loading-logo").style.opacity = 0;
+            elem.style.height = "0%";
+            
+
+            // Destroy div after animation
+                setTimeout(function() {
+                    elem.remove();
+                }, 1000)
+        }, 2000)
 
     /* mapElement.addEventListener("click", (e) => {
         console.log(e)

@@ -17,7 +17,18 @@ const app = express();
 
 const maintenance = process.env.MAINTENANCE == "true"
 
+app.use(express.static("views"));
 app.engine('html', ejs.renderFile);
+
+app.get("/scripts/index.js", function(req, res) {
+    if(!maintenance)
+        res.render("views/scripts/index.js");
+});
+
+app.get("/styles/index.css", function(req, res) {
+    if(!maintenance)
+        res.render("views/styles/index.css");
+});
 
 app.get('/', function(req, res) {
     res.render(maintenance ? "maintenance.html" : "index.html");

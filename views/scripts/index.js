@@ -1,7 +1,4 @@
 window.addEventListener("load", (event) => {
-    screen.orientation.lock();
-
-
     // Offices creation
         let currentFloor = 0;
         let floors = [

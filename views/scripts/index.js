@@ -1,4 +1,7 @@
 window.addEventListener("load", (event) => {
+    screen.orientation.lock();
+
+
     // Offices creation
         let currentFloor = 0;
         let floors = [
@@ -104,8 +107,8 @@ window.addEventListener("load", (event) => {
             // Destroy div after animation
                 setTimeout(function() {
                     elem.remove();
-                }, 1000)
-        }, 2000)
+                }, 0)
+        }, 0)
 
     /* mapElement.addEventListener("click", (e) => {
         console.log(e)

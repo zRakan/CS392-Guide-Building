@@ -85,7 +85,7 @@ body {
 /* Map Container */
     .map-container {
         width: 90%;
-        height: 500px;
+        height: 600px;
 
         transition: 1s -webkit-filter linear;
 
@@ -109,6 +109,7 @@ body {
     @media screen and ( max-height: 768px ) {
         .map-container {
             top: 40%;
+            height: 500px;
             transform: translate(-50%, -40%);
         }
     }
@@ -417,7 +418,7 @@ body {
     position: fixed;
 
     width: 0;
-    height: 70%;
+    height: 50%;
     
     right: 0;
     top: 0;
@@ -448,5 +449,6 @@ body {
     font-size: 24px;
     cursor: pointer;
 
-    display: inline-block;
+    border-top: 1px solid;
+    border-bottom: 1px solid;
 }

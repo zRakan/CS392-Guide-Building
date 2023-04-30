@@ -49,13 +49,6 @@ window.addEventListener("load", (event) => {
 
     const mapElement = document.querySelector(".map-elements");
 
-    // Dropdown menu
-    const optionMenu = document.querySelector(".select-menu"),
-        selectBtn = optionMenu.querySelector(".select-btn"),
-        options = optionMenu.querySelectorAll(".option"),
-        sBtn_text = optionMenu.querySelector(".sBtn-text"),
-        floorText = document.getElementById("title");
-
     // Navbar
     const navbarBtn = document.getElementById("navbar-click"),
         navbarMenu = document.querySelector(".navbar"),
@@ -72,26 +65,38 @@ window.addEventListener("load", (event) => {
         navbarOpened = !navbarOpened;
     });
 
-    selectBtn.addEventListener("click", () =>
-        optionMenu.classList.toggle("active")
-    );
+    // Dropdown menu
+        const optionMenu = document.querySelector(".select-menu"),
+            selectBtn = optionMenu.querySelector(".select-btn"),
+            options = optionMenu.querySelectorAll(".option"),
+            sBtn_text = optionMenu.querySelector(".sBtn-text"),
+            floorText = document.getElementById("title"),
+            optionList = document.querySelector(".options");
 
-    options.forEach((option) => {
-        option.addEventListener("click", () => {
-            let selectedOption = option.querySelector(".option-text").innerText;
+        let dropdownMenu = false;
+        selectBtn.addEventListener("click", () => {
+            optionMenu.classList.toggle("active");
+            dropdownMenu = !dropdownMenu;
 
-            // Floor switcher
-                floors[currentFloor].style.display = "none"; // Hide current floor
-                floors[getFloor(selectedOption)].style.display = ""; // Show floor
-
-            currentFloor = getFloor(selectedOption);
-
-            sBtn_text.innerText = selectedOption;
-            floorText.innerHTML = selectedOption;
-
-            optionMenu.classList.remove("active");
+            optionList.style["pointer-events"] = dropdownMenu ? "auto" : "none";
         });
-    });
+
+        options.forEach((option) => {
+            option.addEventListener("click", () => {
+                let selectedOption = option.querySelector(".option-text").innerText;
+
+                // Floor switcher
+                    floors[currentFloor].style.display = "none"; // Hide current floor
+                    floors[getFloor(selectedOption)].style.display = ""; // Show floor
+
+                currentFloor = getFloor(selectedOption);
+
+                sBtn_text.innerText = selectedOption;
+                floorText.innerHTML = selectedOption;
+
+                optionMenu.classList.remove("active");
+            });
+        });
 
     // Loading screen
         setTimeout(function() {

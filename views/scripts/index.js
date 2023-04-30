@@ -95,6 +95,10 @@ window.addEventListener("load", (event) => {
                 floorText.innerHTML = selectedOption;
 
                 optionMenu.classList.remove("active");
+
+                // Disable prevent clicking
+                    optionList.style["pointer-events"] = "none";
+                    dropdownMenu = false;
             });
         });
 

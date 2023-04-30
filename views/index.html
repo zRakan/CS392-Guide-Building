@@ -97,6 +97,8 @@
                 width: 90%;
                 height: 500px;
 
+                transition: 1s -webkit-filter linear;
+
                 position: absolute;
                 top: 30%;
                 left: 50%;
@@ -420,6 +422,46 @@
         /* Loading screen */
 
 
+        /* Right Navbar */
+        .navbar {           
+            position: fixed;
+
+            width: 0;
+            height: 70%;
+            
+            right: 0;
+            top: 0;
+
+            border-radius: 0 0 0 80px;
+
+            background-color: #2E4B58;
+
+            transition: width 1s ease-in-out;
+        }
+
+        .navbar-items {
+            display: flex;
+            flex-direction: column;
+            min-width: 200px;
+
+            gap: 20px;
+
+            height: 60%;
+
+
+            position: relative;
+            margin-top: auto;
+            top: 20%;
+        }
+
+        #button-navbar {
+            font-size: 24px;
+            cursor: pointer;
+
+            display: inline-block;
+        }
+
+
     </style>
 
 </head>
@@ -462,11 +504,20 @@
           </div>
     </div>
 
+    <!-- Right Navbar -->
+    <div class="navbar">
+        <div class="navbar-items">
+            <button type="button" id="button-navbar">الأكثر شهرة</button>
+            <button type="button" id="button-navbar">تواصل معنا</button>
+            <button type="button" id="button-navbar" style="margin-top: auto">تسجيل الدخول</button>
+        </div>
+    </div>
+
     <!-- Header -->
         <div class="header">
             <div class="header-items">
                 
-                <button type="button">
+                <button id="navbar-click" type="button">
                     <svg class="svg-button" xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" class="bi bi-list" viewBox="0 0 16 16"> <path fill-rule="evenodd" d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5z"/> </svg> 
                 </button>
             </div>
@@ -553,7 +604,21 @@
         sBtn_text = optionMenu.querySelector(".sBtn-text"),
         floorText = document.getElementById("title");
 
+    // Navbar
+    const navbarBtn = document.getElementById("navbar-click"),
+        navbarMenu = document.querySelector(".navbar"),
+        mapContainer = document.querySelector(".map-container");
 
+    let navbarOpened = false;
+    navbarBtn.addEventListener("click", () => {
+        console.log("Test");
+        navbarMenu.style.width = !navbarOpened ? "200px" : "0";
+
+        mapContainer.style.filter = !navbarOpened ? "blur(0.2rem)" : "blur(0)";
+        mapContainer.style["pointer-events"]  = !navbarOpened ? "none" : "auto";
+
+        navbarOpened = !navbarOpened;
+    });
 
     selectBtn.addEventListener("click", () =>
         optionMenu.classList.toggle("active")
@@ -587,8 +652,8 @@
             // Destroy div after animation
                 setTimeout(function() {
                     elem.remove();
-                }, 1000)
-        }, 2000)
+                }, 0)
+        }, 0)
 
     /* mapElement.addEventListener("click", (e) => {
         console.log(e)

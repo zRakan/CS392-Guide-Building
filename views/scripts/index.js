@@ -104,8 +104,8 @@ window.addEventListener("load", (event) => {
             // Destroy div after animation
                 setTimeout(function() {
                     elem.remove();
-                }, 0)
-        }, 0)
+                }, 1000)
+        }, 2000)
 
     /* mapElement.addEventListener("click", (e) => {
         console.log(e)

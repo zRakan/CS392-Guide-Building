@@ -13,25 +13,26 @@ import ejs from "ejs"
     import fs from "fs"
 
 
+// Routes
+    import { routes } from "./routes/routes.js";
+
 const app = express();
+
+// Routes 
+    app.use(routes.authentication); // Authentication route
+    app.use("/map", routes.map);
 
 const maintenance = process.env.MAINTENANCE == "true"
 
-app.use(express.static("views"));
+if(!maintenance) // Don't use static if it's in maintenanct
+    app.use(express.static("static/views"));
 app.engine('html', ejs.renderFile);
 
-app.get("/scripts/index.js", function(req, res) {
-    if(!maintenance)
-        res.render("views/scripts/index.js");
-});
-
-app.get("/styles/index.css", function(req, res) {
-    if(!maintenance)
-        res.render("views/styles/index.css");
-});
-
 app.get('/', function(req, res) {
-    res.render(maintenance ? "maintenance.html" : "index.html");
+    if(maintenance)
+        res.send("This website under maintenance");
+    else
+        res.render("index.html");
 })
 
 app.get("*", function(req, res) {

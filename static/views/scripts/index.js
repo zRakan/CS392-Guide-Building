@@ -105,7 +105,7 @@ window.addEventListener("load", async (event) => {
 
     const mapElement = document.querySelector(".map-elements");
 
-     mapElement.addEventListener("click", (e) => {
+     /*mapElement.addEventListener("click", (e) => {
         console.log(e)
 
         let rect = e.target.getBoundingClientRect();
@@ -118,7 +118,7 @@ window.addEventListener("load", async (event) => {
         element.style.position = "relative";
         element.style.top = y + "px";
         element.style.left = x + "px";
-    });
+    });*/
 
 
     let grabbing = false;

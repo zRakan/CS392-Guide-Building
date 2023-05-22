@@ -102,7 +102,10 @@ window.addEventListener("load", async (event) => {
             });
         });
 
-     /*mapElement.addEventListener("click", (e) => {
+
+    const mapElement = document.querySelector(".map-elements");
+
+     mapElement.addEventListener("click", (e) => {
         console.log(e)
 
         let rect = e.target.getBoundingClientRect();
@@ -115,10 +118,7 @@ window.addEventListener("load", async (event) => {
         element.style.position = "relative";
         element.style.top = y + "px";
         element.style.left = x + "px";
-    });*/
-
-
-    const mapElement = document.querySelector(".map-elements");
+    });
 
 
     let grabbing = false;
@@ -147,12 +147,12 @@ window.addEventListener("load", async (event) => {
         if (!grabbing) return;
         e.preventDefault();
 
-        mapElement.scrollLeft = scrollPos[0] - (mapElement.offsetLeft - startPos[0]);
-        mapElement.scrollTop = scrollPos[1] - (mapElement.offsetTop - startPos[1]);
+        mapElement.scrollLeft = scrollPos[0] - ((e.pageX - mapElement.offsetLeft) - startPos[0]);
+        mapElement.scrollTop = scrollPos[1] - ((e.pageY - mapElement.offsetTop) - startPos[1]);
     });
 
 
-    
+
 
     // Page loaded [Hiding loading screen]
         loaded();

@@ -8,10 +8,43 @@ function loaded() {
         }, 1000)
 }
 
+let floorTexts = ["الطابق الأول", "الطابق الثاني", "الطابث الثالث", "الطابق الرابع"]
+function getFloorByText(floor) {
+    if(floor == "الطابق الرابع")
+        return 3;
+    else if(floor == "الطابق الثالث")
+        return 2;
+    else if(floor == "الطابق الثاني")
+        return 1;
+    else return 0;
+}
+
+let currentFloor = 0;
+let floors, dropText, mapText, searchInput;
+function switchFloor(selectedFloor, isDrop) {
+    if(isDrop) // Search input remove if switched from drop down
+        searchInput.value = "";
+
+    floors[currentFloor].style.display = "none"; // Hide current floor
+
+    // Unhide offices inside div [If user search then change floor from dropdown menu]
+        let divFloor = floors[currentFloor].getElementsByTagName("*");
+        for(let i = 0; i < divFloor.length; i++)
+            divFloor[i].style.display = "";
+
+    currentFloor = typeof(selectedFloor) == "string" ? getFloorByText(selectedFloor) : selectedFloor;
+
+    floors[currentFloor].style.display = ""; // Show floor
+
+    // Changing Text for dropdownMenu & map
+        let floorText = floorTexts[currentFloor];
+        dropText.innerText = floorText;
+        mapText.innerHTML = floorText;
+}
+
 window.addEventListener("load", async (event) => {
     // Offices creation
-        let currentFloor = 0;
-        let floors = [
+        floors = [
             document.getElementById("first_floor"),
             document.getElementById("second_floor"),
             document.getElementById("third_floor"),
@@ -22,32 +55,35 @@ window.addEventListener("load", async (event) => {
             floors[i].style.display = "none"
         }
 
-        function getFloor(floor) {
-            if(floor == "الطابق الرابع")
-                return 3;
-            else if(floor == "الطابق الثالث")
-                return 2;
-            else if(floor == "الطابق الثاني")
-                return 1;
-            else return 0;
-        }
-
     // Create offices in each floor
         let offices = await fetch("/map/offices");
             offices = await(offices.json());
 
-            for(let office in offices) {
-                let obj = offices[office];
+            for(let floor in offices) {
+                let officeList = offices[floor];
 
-                let div = document.createElement("div");
-                    div.setAttribute("id", "test");
-                div.innerHTML = office;
+                for(let office in officeList) {
+                    let div = document.createElement("div");
+                        div.setAttribute("id", "office");
 
-                div.addEventListener("click", async () => {
-                    await fetch("/map/office/"+office);
-                })
-                
-                floors[obj.floor].appendChild(div);
+                    // Positioning
+                        div.style.position = "absolute";
+                        div.style.left = officeList[office].left ? officeList[office].left : "0px";
+                        div.style.top = officeList[office].top ? officeList[office].top : "0px";
+
+                        if(officeList[office].width != null){
+                            div.style.width = officeList[office].width;
+                            div.style.height = officeList[office].height;
+                        }
+
+                    div.innerHTML = office;
+
+                    div.addEventListener("click", async () => {
+                        await fetch("/map/office/"+office);
+                    })
+                    
+                    floors[floor].appendChild(div);
+                }
             }
 
     // Navbar
@@ -69,10 +105,11 @@ window.addEventListener("load", async (event) => {
         const optionMenu = document.querySelector(".select-menu"),
             selectBtn = optionMenu.querySelector(".select-btn"),
             options = optionMenu.querySelectorAll(".option"),
-            sBtn_text = optionMenu.querySelector(".sBtn-text"),
-            floorText = document.getElementById("title"),
             optionList = document.querySelector(".options");
 
+            dropText = optionMenu.querySelector(".sBtn-text");
+            mapText = document.getElementById("title");
+        
         let dropdownMenu = false;
         selectBtn.addEventListener("click", () => {
             optionMenu.classList.toggle("active");
@@ -85,14 +122,7 @@ window.addEventListener("load", async (event) => {
             option.addEventListener("click", () => {
                 let selectedOption = option.querySelector(".option-text").innerText;
 
-                // Floor switcher
-                    floors[currentFloor].style.display = "none"; // Hide current floor
-                    floors[getFloor(selectedOption)].style.display = ""; // Show floor
-
-                currentFloor = getFloor(selectedOption);
-
-                sBtn_text.innerText = selectedOption;
-                floorText.innerHTML = selectedOption;
+                switchFloor(selectedOption, true);
 
                 optionMenu.classList.remove("active");
 
@@ -100,6 +130,41 @@ window.addEventListener("load", async (event) => {
                     optionList.style["pointer-events"] = "none";
                     dropdownMenu = false;
             });
+        });
+
+        // Search offices
+        searchInput = document.getElementById("office-search");
+        let delay;
+        searchInput.addEventListener("input", (e) => {
+            let input = searchInput.value.toLowerCase();
+            
+            let results = [];
+            for(let floor in offices) {
+                let officeList = offices[floor];
+
+                for(let office in officeList) {
+                    if(office.toLowerCase().indexOf(input) >= 0)
+                        results.push({floor: floor, office});
+                }
+            }
+            
+            if(results.length == 1) {
+                let floorResult = results[0].floor;
+                switchFloor(parseInt(floorResult, 10));
+
+                // Hide all other offices from the floor
+                let divFloor = floors[floorResult].getElementsByTagName("*");
+                console.log(floors[floorResult].getElementsByTagName("*"));
+                for(let i = 0; i < divFloor.length; i++) {
+                    if(divFloor[i].innerHTML != results[0].office)
+                        divFloor[i].style.display = "none";
+                }
+            } else { // Unhide offices
+                let divFloor = floors[currentFloor].getElementsByTagName("*");
+                
+                for(let i = 0; i < divFloor.length; i++)
+                    divFloor[i].style.display = "";
+            }
         });
 
 

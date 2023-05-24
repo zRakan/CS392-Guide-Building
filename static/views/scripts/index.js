@@ -142,7 +142,6 @@ window.addEventListener("load", async (event) => {
                         let officeResp = await fetch("/map/office/" + floor + "/"+ office);
                         officeResp = await officeResp.json();
 
-                        console.log(officeResp);
                         showInformation(office, officeResp.teacher, officeResp.maintenance);
                     })
                     
@@ -245,7 +244,6 @@ window.addEventListener("load", async (event) => {
                 }
             }
             
-            console.log(results);
             if(results.length == 1) {
                 let floorResult = results[0].floor;
                 switchFloor(parseInt(floorResult, 10));
@@ -284,11 +282,6 @@ window.addEventListener("load", async (event) => {
         element.style.top = y + "px";
         element.style.left = x + "px";
     });*/
-
-    mapElement.addEventListener("scroll", (e) => {
-        console.log(e);
-    });
-
 
     let grabbing = false;
         

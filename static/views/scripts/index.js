@@ -253,8 +253,9 @@ window.addEventListener("load", async (event) => {
                 //console.log(floors[floorResult].getElementsByTagName("*"));
                 for(let i = 0; i < divFloor.length; i++) {
                     if(divFloor[i].innerHTML != results[0].office){
-                        divFloor[i].scrollIntoView();
                         divFloor[i].style.display = "none";
+                    } else if(divFloor[i].innerHTML == results[0].office) {
+                        divFloor[i].scrollIntoView({ behavior: "smooth", block: 'nearest', inline: 'center' });
                     }
                 }
             } else { // Unhide offices

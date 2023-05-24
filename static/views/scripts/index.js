@@ -1,3 +1,5 @@
+seamless.polyfill();
+
 let floors, dropText, mapText, searchInput, mapElement, mapContainer;
 
 function loaded() {

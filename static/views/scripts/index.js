@@ -1,3 +1,5 @@
+let floors, dropText, mapText, searchInput, mapElement, mapContainer;
+
 function loaded() {
     let elem = document.querySelector(".loading-screen");
     document.getElementById("loading-logo").style.opacity = 0;
@@ -8,7 +10,7 @@ function loaded() {
         }, 1000)
 }
 
-let floorTexts = ["الطابق الأول", "الطابق الثاني", "الطابث الثالث", "الطابق الرابع"]
+let floorTexts = ["الطابق الأول", "الطابق الثاني", "الطابق الثالث", "الطابق الرابع"]
 function getFloorByText(floor) {
     if(floor == "الطابق الرابع")
         return 3;
@@ -19,12 +21,54 @@ function getFloorByText(floor) {
     else return 0;
 }
 
-let currentFloor = 0;
-let floors, dropText, mapText, searchInput;
-function switchFloor(selectedFloor, isDrop) {
-    if(isDrop) // Search input remove if switched from drop down
-        searchInput.value = "";
+function showInformation(office, teacher, maintenance) {
+    // Blur Background
+        mapContainer.style.filter = "blur(0.2rem)";
+        mapContainer.style["pointer-events"]  = "none";
 
+    let containerDiv = document.createElement("div");
+        containerDiv.setAttribute("class", "office-info")
+
+    let exitBtn = document.createElement("button")
+        exitBtn.setAttribute("id", "exit-btn");
+        exitBtn.setAttribute("type", "button");
+        exitBtn.innerHTML = '<svg transform="rotate(45)" xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" class="bi bi-plus-circle" viewBox="0 0 16 16"> <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/> <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/> </svg>';
+
+        exitBtn.addEventListener("click", (e) => {
+            mapContainer.style.filter = "none";
+            mapContainer.style["pointer-events"]  = "auto";  
+            
+            containerDiv.classList.toggle("active");
+
+            setTimeout(function() {
+                document.body.removeChild(containerDiv); // Removing child
+            }, 1000);
+        });
+
+    let shareBtn = document.createElement("button")
+        shareBtn.setAttribute("id", "share-btn");
+        shareBtn.setAttribute("type", "button");
+        shareBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-share-fill" viewBox="0 0 16 16"> <path d="M11 2.5a2.5 2.5 0 1 1 .603 1.628l-6.718 3.12a2.499 2.499 0 0 1 0 1.504l6.718 3.12a2.5 2.5 0 1 1-.488.876l-6.718-3.12a2.5 2.5 0 1 1 0-3.256l6.718-3.12A2.5 2.5 0 0 1 11 2.5z"/> </svg>';
+
+    let officeText = document.createElement("div");
+        officeText.setAttribute("id", "office-text");
+        officeText.innerHTML = `<span id="office-title">${office}</span>
+        ${teacher? `<span>المكتب: <span id="small-text">${teacher}</span></span>` : ""}
+        <span>رقم الصيانة: <span id="small-text">${maintenance}</span></span>`
+
+        containerDiv.appendChild(exitBtn);
+        containerDiv.appendChild(shareBtn);
+        containerDiv.appendChild(officeText);
+
+    document.body.appendChild(containerDiv);
+}
+
+let currentFloor = 0;
+function switchFloor(selectedFloor, isDrop) {
+    if(isDrop) {
+        searchInput.value = ""; // // Search input remove if switched from drop down
+        mapElement.scrollTo(0, 0); // Reset scroll for map
+    }
     floors[currentFloor].style.display = "none"; // Hide current floor
 
     // Unhide offices inside div [If user search then change floor from dropdown menu]
@@ -51,10 +95,6 @@ window.addEventListener("load", async (event) => {
             document.getElementById("fourth_floor"),
         ];
 
-        for(let i = 1; i < floors.length; i++) { // Hide other floors
-            floors[i].style.display = "none"
-        }
-
     // Create offices in each floor
         let offices = await fetch("/map/offices");
             offices = await(offices.json());
@@ -62,6 +102,8 @@ window.addEventListener("load", async (event) => {
             for(let floor in offices) {
                 let officeList = offices[floor];
 
+                let leftMax = 0;
+                let leftWidth;
                 for(let office in officeList) {
                     let div = document.createElement("div");
                         div.setAttribute("id", "office");
@@ -71,24 +113,66 @@ window.addEventListener("load", async (event) => {
                         div.style.left = officeList[office].left ? officeList[office].left : "0px";
                         div.style.top = officeList[office].top ? officeList[office].top : "0px";
 
+                        let leftP = officeList[office].left ? parseInt((officeList[office].left).slice(0, -2), 10) : 0;
+                        let leftW = parseInt((officeList[office].width).slice(0, -2), 10);
+
                         if(officeList[office].width != null){
                             div.style.width = officeList[office].width;
                             div.style.height = officeList[office].height;
                         }
 
+                        if(!leftMax){
+                            leftMax = leftP;
+                            leftWidth = leftW;
+                        } else if(leftP > leftMax) {
+                            // Don't change even if left bigger than old
+                            // This will calculate total width&left to make sure it's bigger than old one
+                            if(leftP + leftW > leftMax + leftWidth) {
+                                leftMax = leftP;
+                                leftWidth = leftW;
+                            }
+                        } else if(leftP == leftMax) {
+                            if(leftWidth < officeList[office].width)
+                                leftWidth = officeList[office].width;
+                        }
+
                     div.innerHTML = office;
 
                     div.addEventListener("click", async () => {
-                        await fetch("/map/office/"+office);
+                        let officeResp = await fetch("/map/office/" + floor + "/"+ office);
+                        officeResp = await officeResp.json();
+
+                        console.log(officeResp);
+                        showInformation(office, officeResp.teacher, officeResp.maintenance);
                     })
                     
                     floors[floor].appendChild(div);
                 }
+
+                if(floors[floor].scrollHeight-50 > floors[floor].clientWidth) {
+                    let paddingRight = document.createElement("div");
+
+                    //console.log(leftWidth, floor);
+
+                    paddingRight.style.position = "absolute";
+                    paddingRight.style.left = leftMax + "px";
+
+                    paddingRight.style.height = "1px";
+
+                    // Offset: width + 5 padding
+                        paddingRight.style["padding-right"] = (leftWidth + 10) + "px";
+
+                    floors[floor].appendChild(paddingRight);
+                }
+            }
+
+            for(let i = 1; i < floors.length; i++) { // Hide other floors
+                floors[i].style.display = "none"
             }
 
     // Navbar
         const navbarBtn = document.getElementById("navbar-click"),
-            navbarMenu = document.querySelector(".navbar"),
+            navbarMenu = document.querySelector(".navbar");
             mapContainer = document.querySelector(".map-container");
 
         let navbarOpened = false;
@@ -143,21 +227,37 @@ window.addEventListener("load", async (event) => {
                 let officeList = offices[floor];
 
                 for(let office in officeList) {
-                    if(office.toLowerCase().indexOf(input) >= 0)
-                        results.push({floor: floor, office});
+                    let officeId = office.toLowerCase().indexOf(input) >= 0;
+                    let officeName, officeMaintenance;
+
+                    let officeInfo = officeList[office].info;
+                    if(officeInfo) {
+                        if(officeInfo.length > 1){
+                            officeName = officeInfo[0].toLowerCase().indexOf(input) >= 0;
+                            officeMaintenance = officeInfo[1].toLowerCase().indexOf(input) >= 0;
+                        } else
+                            officeMaintenance = officeInfo[0].toLowerCase().indexOf(input) >= 0;
+                    }
+
+                    // Search by office (ID & Name & Maintenance number)
+                    if(officeId | officeName || officeMaintenance)
+                        results.push({floor, office, info: officeList[office].info});
                 }
             }
             
+            console.log(results);
             if(results.length == 1) {
                 let floorResult = results[0].floor;
                 switchFloor(parseInt(floorResult, 10));
 
                 // Hide all other offices from the floor
                 let divFloor = floors[floorResult].getElementsByTagName("*");
-                console.log(floors[floorResult].getElementsByTagName("*"));
+                //console.log(floors[floorResult].getElementsByTagName("*"));
                 for(let i = 0; i < divFloor.length; i++) {
-                    if(divFloor[i].innerHTML != results[0].office)
+                    if(divFloor[i].innerHTML != results[0].office){
+                        divFloor[i].scrollIntoView();
                         divFloor[i].style.display = "none";
+                    }
                 }
             } else { // Unhide offices
                 let divFloor = floors[currentFloor].getElementsByTagName("*");
@@ -168,7 +268,7 @@ window.addEventListener("load", async (event) => {
         });
 
 
-    const mapElement = document.querySelector(".map-elements");
+    mapElement = document.querySelector(".map-elements");
 
      /*mapElement.addEventListener("click", (e) => {
         console.log(e)
@@ -184,6 +284,10 @@ window.addEventListener("load", async (event) => {
         element.style.top = y + "px";
         element.style.left = x + "px";
     });*/
+
+    mapElement.addEventListener("scroll", (e) => {
+        console.log(e);
+    });
 
 
     let grabbing = false;
@@ -217,6 +321,7 @@ window.addEventListener("load", async (event) => {
     });
 
 
+    //switchFloor(3);
 
 
     // Page loaded [Hiding loading screen]

@@ -150,8 +150,8 @@ body {
         background-color: white;
 
         overflow: auto;
-        scrollbar-width: thin;
 
+        scrollbar-width: none;
         -webkit-user-select: none;
         -webkit-touch-callout: none;
         -moz-user-select: none;
@@ -303,27 +303,6 @@ body {
         -webkit-animation-fill-mode: both;
     }
 
-    @keyframes fadeInUp {
-        from {
-            transform: translate3d(0, 30px, 0);
-        }
-        to {
-            transform: translate3d(0, 0, 0);
-            opacity: 1;
-        }
-    }
-
-    @keyframes fadeInDown {
-        from {
-            transform: translate3d(0, 0, 0);
-            opacity: 1;
-        }
-        to {
-            transform: translate3d(0, 20px, 0);
-            opacity: 0;
-        }
-    }
-
 
 
 /* Loading screen */
@@ -464,4 +443,113 @@ body {
 
     border-top: 1px solid;
     border-bottom: 1px solid;
+}
+
+/* Office Information */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+    }
+}
+
+.office-info.active {
+    animation-name: fadeOut;
+    -webkit-animation-name: fadeOut;
+    animation-duration: 1s;
+    animation-fill-mode: both;
+    -webkit-animation-duration: 1s;
+    -webkit-animation-fill-mode: both;
+}
+
+.office-info {
+    position: relative;
+
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, 50%);
+
+    background-color: white;
+    box-shadow: 2px 2px #888888;
+
+
+    animation-name: fadeIn;
+    -webkit-animation-name: fadeIn;
+    animation-duration: 1s;
+    animation-fill-mode: both;
+    -webkit-animation-duration: 1s;
+    -webkit-animation-fill-mode: both;
+
+
+    width: 300px;
+    height: 300px;
+
+    border-radius: 20px;
+}
+
+.office-info > button {
+    position: absolute;
+
+    cursor: pointer;
+}
+
+.office-info #exit-btn {
+    margin-top: 10px;
+    margin-right: 10px;
+    color: red;
+    right: 0px;
+}
+
+
+.office-info #share-btn {
+    margin-left: 10px;
+    margin-bottom: 10px;
+
+    color: #2E4B58;
+
+    bottom: 0px;
+}
+
+.office-info #office-text {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+
+    row-gap: 10px;
+
+    width: 90%;
+
+    margin: 0 auto;
+    z-index: 0px;
+    left: 50%;
+    top: 30%;
+    transform: translate(-50%);
+}
+
+.office-info #office-text > span {    
+    font-family: 'IBM Plex Sans Arabic', sans-serif;
+    font-size: 1.4rem;
+
+    direction: rtl;
+}
+
+.office-info #office-text > #office-title {
+    text-align: center;
+    font-size: 1.6rem;
+}
+
+
+.office-info #office-text > span #small-text {
+    font-size: 1.2rem;
 }

@@ -1,39 +1,29 @@
 import express from "express";
-
+import fs from "fs/promises";
 
 export const mapRoute = express.Router();
 
 
-// Offices [To-do: Save it in JSON]
-let offices = [
-    { // Floor #1
-        ["G117"]: {width: "60px", height: "40px", top: "5px", left: "20px"},
-        ["G118-G119"]: {width: "120px", height: "40px", top: "5px", left: "100px"},
-        ["G120"]: {width: "60px", height: "40px", top: "5px", left: "235px"},
-        ["G116"]: {width: "80px", height: "40px", top: "70px", left: "0px"},
-        ["G121"]: {width: "80px", height: "40px", top: "70px", left: "245px"},
-        ["G106"]: {width: "80px", height: "40px", top: "240px", left: "245px"},
-        ["G111"]: {width: "50px", height: "40px", top: "300px", left: "0px"},
-        ["G110"]: {width: "50px", height: "40px", top: "300px", left: "55px"},
-        ["G109-G108"]: {width: "120px", height: "40px", top: "300px", left: "110px"},
-        ["G107"]: {width: "60px", height: "40px", top: "300px", left: "240px"}
-    },
-    
+// Offices
+let offices = [];
 
-    { // Floor #2
-        ["F100"]: {floor: 1},
-    },
+try {
+    offices = JSON.parse(await fs.readFile("data.json"));
+} catch(e) { // If data.json doesn't exist
+    fs.writeFile("data.json", "[]");
+}
 
-
-    { // Floor #3
-        ["F089"]: {floor: 2},
-    },
-
-
-    { // Floor #4  
-        ["T102"]: {floor: 3},
+// Filtering info
+let officesList = [];
+let infoList =  [];
+for(let floor in offices){
+    officesList.push({});
+    infoList.push({});
+    for(let office in offices[floor]) {
+        officesList[floor][office] = (({info, ...a}) => a)(offices[floor][office])
+        infoList[floor][office] = (({width, height, top, left, ...b}) => b)(offices[floor][office])
     }
-]
+}
 
 mapRoute.get("/offices", function(req, res) {
     // TO-DO
@@ -42,14 +32,27 @@ mapRoute.get("/offices", function(req, res) {
 });
 
 
-mapRoute.get("/office/:office_id", function(req, res) {
+mapRoute.get("/office/:floor/:office_id", function(req, res) {
     // TO-DO
     let officeId = req.params.office_id;
-    if(!offices[officeId]){
+
+    let floor = req.params.floor;
+
+    if(floor < '0' || floor > '3') { // If floor is not in [0, 3]
+        res.status(400).send({ error: "Floor is not found" });
+        return;
+    }
+
+    floor = parseInt(floor, 10);
+
+    if(!Object.keys(officesList[floor]).includes(officeId)) { // If office not in floor
         res.sendStatus(400);
         return;
     }
 
-    console.log(officeId);
-    res.sendStatus(401);
+    
+    if((infoList[floor][officeId].info).length == 2)
+        res.status(200).send({ teacher: infoList[floor][officeId].info[0], maintenance: infoList[floor][officeId].info[1] });
+    else
+        res.status(200).send({ maintenance: infoList[floor][officeId].info[0] });
 });

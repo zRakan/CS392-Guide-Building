@@ -3,12 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
     <title>الخريطة التفاعلية</title>
     
-    <link rel="stylesheet" href="styles/index.css">
+    <link rel="stylesheet" href="views/styles/index.css">
+
     <script src="https://cdn.jsdelivr.net/npm/seamless-scroll-polyfill@latest"></script>
-    <script src="scripts/index.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode-js-package@1.0.4/qrcode.min.js"></script>
+
+
+    <% if(logged) { %>
+        <script>
+            let isLogged = true
+        </script>
+    <% } %>
+
+    <script src="views/scripts/index.js"></script>
 
 </head>
 <body>
@@ -53,11 +63,42 @@
     <!-- Right Navbar -->
     <div class="navbar">
         <div class="navbar-items">
-            <button type="button" id="button-navbar">الأكثر شهرة</button>
-            <button type="button" id="button-navbar">تواصل معنا</button>
-            <button type="button" id="button-navbar" style="margin-top: auto">تسجيل الدخول</button>
+            <button type="button" id="button-navbar">
+                الأكثر شهرة
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-trending-up"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+            </button>
+            <button type="button" id="button-navbar">
+                تواصل معنا
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 512 512"><path d="M256 0C114.6 0 0 114.6 0 256s114.6 256 256 256s256-114.6 256-256S397.4 0 256 0zM256 400c-18 0-32-14-32-32s13.1-32 32-32c17.1 0 32 14 32 32S273.1 400 256 400zM325.1 258L280 286V288c0 13-11 24-24 24S232 301 232 288V272c0-8 4-16 12-21l57-34C308 213 312 206 312 198C312 186 301.1 176 289.1 176h-51.1C225.1 176 216 186 216 198c0 13-11 24-24 24s-24-11-24-24C168 159 199 128 237.1 128h51.1C329 128 360 159 360 198C360 222 347 245 325.1 258z"/></svg>
+            </button>
+            <button type="button" id="button-navbar">
+                تسجيل الدخول
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-person-circle" viewBox="0 0 16 16"> <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/> <path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1z"/> </svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M16.293 9.293L12 13.586L7.707 9.293l-1.414 1.414L12 16.414l5.707-5.707z"/></svg>
+            </button>
+
+
+            <div class="login-container">
+                <div id="username-field">
+                    <input type="text" id="login-input">
+                    <span>اسم المستخدم </span>
+    
+                </div>
+    
+                <div id="password-field">
+                    <input type="password" id="login-input">
+                    <span>كلمة المرور</span>
+                </div>
+    
+                <button type="submit" id="login-submit">تأكيد</button>
+    
+                <div id="login-line"></div>
+            </div>
         </div>
     </div>
+
+    <!-- Notifications -->
+    <div class="notification-container"></div>
 
     <!-- Header -->
         <div class="header">
@@ -74,7 +115,6 @@
         <div class="footer-alignment" style="direction: rtl;">
 
             <div class="footer-item">
-                <svg style="color: white" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 512 512"> <path d="M256 0C114.6 0 0 114.6 0 256s114.6 256 256 256s256-114.6 256-256S397.4 0 256 0zM256 128c39.77 0 72 32.24 72 72S295.8 272 256 272c-39.76 0-72-32.24-72-72S216.2 128 256 128zM256 448c-52.93 0-100.9-21.53-135.7-56.29C136.5 349.9 176.5 320 224 320h64c47.54 0 87.54 29.88 103.7 71.71C356.9 426.5 308.9 448 256 448z" fill="white"></svg>
                 <a>جميع الحقوق محفوظة لجامعة الإمام محمد بن سعود<br>الإسلامية</a>                
             </div>
         </div>

@@ -46,7 +46,7 @@ mapRoute.get("/office/:floor/:office_id", function(req, res) {
     floor = parseInt(floor, 10);
 
     if(!Object.keys(officesList[floor]).includes(officeId)) { // If office not in floor
-        res.sendStatus(400);
+        res.status(400).send({ error: "Office is not found" });
         return;
     }
 

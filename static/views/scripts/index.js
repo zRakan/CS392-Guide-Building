@@ -68,7 +68,7 @@ function showQR(containerDiv, office) {
         qrImage.setAttribute("id", "qr-office");
         // Generating a QRCode
             new QRCode(qrImage, {
-                text: window.location.host + "/?office=" + encodeURIComponent(office),
+                text: window.location.origin + "/?office=" + encodeURIComponent(office),
                 width: 150,
                 height: 150,
 
@@ -187,7 +187,7 @@ function showInformation(office, teacher, maintenance) {
 
         // Share office by link
             linkBtn.addEventListener('click', function(e) {
-                navigator.clipboard.writeText(window.location.host + '/?office=' + encodeURIComponent(office));
+                navigator.clipboard.writeText(window.location.origin + '/?office=' + encodeURIComponent(office));
                 showNotification('تم نسخ رابط المكتب بنجاح', 'success')
             });
 

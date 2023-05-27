@@ -8,7 +8,9 @@ let floors, dropText, mapText, searchInput, mapElement, mapContainer;
 
     let directOffice = [];
 
-
+/**
+    * @summary This function will remove the splash screen
+*/
 function loaded() {
     let elem = document.querySelector(".loading-screen");
     document.getElementById("loading-logo").style.opacity = 0;
@@ -27,6 +29,12 @@ function loaded() {
 }
 
 let floorTexts = ["الطابق الأول", "الطابق الثاني", "الطابق الثالث", "الطابق الرابع"]
+
+/**
+    * @summary This function will return floor number
+    * @param {String} floor - Floor name
+    * @return {Integer} - Floor number
+*/
 function getFloorByText(floor) {
     if(floor == "الطابق الرابع")
         return 3;
@@ -37,6 +45,11 @@ function getFloorByText(floor) {
     else return 0;
 }
 
+/**
+    * @summary This function will create a QRCode for the target office
+    * @param {HTMLDivElement} containerDiv - The container of the div
+    * @param {HTMLDivElement} office - Office Div element 
+*/
 function showQR(containerDiv, office) {
     // Blur previouscontainer
         containerDiv.style.filter = "blur(0.2rem)";
@@ -65,6 +78,11 @@ function showQR(containerDiv, office) {
 
 
 
+    /**
+        * @summary This will listen click event from exit button
+        * @type {HTMLElement} - The target of the listener
+        * @listens document#click - The mouse click event 
+    */
     exitBtn.addEventListener("click", function(e) {
         if(!qrContainer.classList.contains("active")){
             // Unblur previous container
@@ -88,26 +106,38 @@ function showQR(containerDiv, office) {
         showNotification("تم إنشاء المربّع بنجاح", "success")
 }
 
+/**
+    * @summary This function will create a div with information of the office
+    * @param {HTMLDivElement} office The container of the div
+    * @param {String} teacher Teacher name
+    * @param {String} maintenance Maintenance number 
+*/
 function showInformation(office, teacher, maintenance) {
     // Blur Background
-        mapContainer.style.filter = "blur(0.2rem)";
-        mapContainer.style["pointer-events"]  = "none";
+    mapContainer.style.filter = 'blur(0.2rem)';
+    mapContainer.style['pointer-events']  = 'none'; // Prevent clicking map container
 
-    let containerDiv = document.createElement("div");
-        containerDiv.setAttribute("class", "office-info")
+    // Create container for information
+    let containerDiv = document.createElement('div');
+        containerDiv.setAttribute('class', 'office-info')
 
-    let exitBtn = document.createElement("button")
-        exitBtn.setAttribute("id", "exit-btn");
-        exitBtn.setAttribute("type", "button");
+    // Create exit button
+    let exitBtn = document.createElement('button')
+        exitBtn.setAttribute('id', 'exit-btn');
+        exitBtn.setAttribute('type', 'button');
         exitBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" class="bi bi-plus-circle" viewBox="0 0 16 16"> <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/> <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/> </svg>';
 
-        // Exit button event
-        exitBtn.addEventListener("click", function(e) {
-            if(!containerDiv.classList.contains("active")) {
-                mapContainer.style.filter = "none";
-                mapContainer.style["pointer-events"]  = "auto";  
+        /**
+            * @summary This will listen click event from exit button
+            * @type {HTMLElement} - The target of the listener
+            * @listens document#click - The mouse click event 
+        */
+        exitBtn.addEventListener('click', function(e) {
+            if(!containerDiv.classList.contains('active')) {
+                mapContainer.style.filter = 'none';
+                mapContainer.style['pointer-events']  = 'auto';  
                 
-                containerDiv.classList.toggle("active");
+                containerDiv.classList.toggle('active');
 
                 setTimeout(function() {
                     document.body.removeChild(containerDiv); // Removing this container
@@ -115,69 +145,84 @@ function showInformation(office, teacher, maintenance) {
             }
         });
 
-    let shareBtn = document.createElement("button")
-        shareBtn.setAttribute("id", "share-btn");
-        shareBtn.setAttribute("type", "button");
+    // Create Share Button
+    let shareBtn = document.createElement('button')
+        shareBtn.setAttribute('id', 'share-btn');
+        shareBtn.setAttribute('type', 'button');
         shareBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-share-fill" viewBox="0 0 16 16"> <path d="M11 2.5a2.5 2.5 0 1 1 .603 1.628l-6.718 3.12a2.499 2.499 0 0 1 0 1.504l6.718 3.12a2.5 2.5 0 1 1-.488.876l-6.718-3.12a2.5 2.5 0 1 1 0-3.256l6.718-3.12A2.5 2.5 0 0 1 11 2.5z"/> </svg>';
 
-    let shareMethods = document.createElement("div");
-        shareMethods.setAttribute("id", "share-methods");
+    let shareMethods = document.createElement('div');
+        shareMethods.setAttribute('id', 'share-methods');
 
-    let qrBtn = document.createElement("button");
-        qrBtn.setAttribute("id", "share-qr");
+    let qrBtn = document.createElement('button');
+        qrBtn.setAttribute('id', 'share-qr');
         qrBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-qr-code" viewBox="0 0 16 16"> <path d="M2 2h2v2H2V2Z"></path> <path d="M6 0v6H0V0h6ZM5 1H1v4h4V1ZM4 12H2v2h2v-2Z"></path> <path d="M6 10v6H0v-6h6Zm-5 1v4h4v-4H1Zm11-9h2v2h-2V2Z"></path> <path d="M10 0v6h6V0h-6Zm5 1v4h-4V1h4ZM8 1V0h1v2H8v2H7V1h1Zm0 5V4h1v2H8ZM6 8V7h1V6h1v2h1V7h5v1h-4v1H7V8H6Zm0 0v1H2V8H1v1H0V7h3v1h3Zm10 1h-1V7h1v2Zm-1 0h-1v2h2v-1h-1V9Zm-4 0h2v1h-1v1h-1V9Zm2 3v-1h-1v1h-1v1H9v1h3v-2h1Zm0 0h3v1h-2v1h-1v-2Zm-4-1v1h1v-2H7v1h2Z"></path> <path d="M7 12h1v3h4v1H7v-4Zm9 2v2h-3v-1h2v-1h1Z"></path> </svg>';
         shareMethods.appendChild(qrBtn);
 
-        qrBtn.addEventListener("click", function(e) {
-            if(qrBtn.parentElement.classList.contains("active")) // Check if parent is active or not
+
+        /**
+            * @summary This will listen click event from QR button
+            * @type {HTMLElement} - The target of the listener
+            * @listens document#click - The mouse click event 
+        */
+        qrBtn.addEventListener('click', function(e) {
+            if(qrBtn.parentElement.classList.contains('active')) // Check if parent is active or not
                 showQR(containerDiv, office);
         });
 
-    let linkBtn = document.createElement("button");
-        linkBtn.setAttribute("id", "share-link");
+    let linkBtn = document.createElement('button');
+        linkBtn.setAttribute('id', 'share-link');
         linkBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-link" viewBox="0 0 16 16"> <path d="M6.354 5.5H4a3 3 0 0 0 0 6h3a3 3 0 0 0 2.83-4H9c-.086 0-.17.01-.25.031A2 2 0 0 1 7 10.5H4a2 2 0 1 1 0-4h1.535c.218-.376.495-.714.82-1z"/> <path d="M9 5.5a3 3 0 0 0-2.83 4h1.098A2 2 0 0 1 9 6.5h3a2 2 0 1 1 0 4h-1.535a4.02 4.02 0 0 1-.82 1H12a3 3 0 1 0 0-6H9z"/> </svg>';
         shareMethods.appendChild(linkBtn);
 
         let firstTime = true;
-        shareBtn.addEventListener("click", function(e) {
+        
+        shareBtn.addEventListener('click', function(e) {
             if(!firstTime)
-                shareMethods.classList.toggle("hide");
+                shareMethods.classList.toggle('hide');
             
-            shareMethods.classList.toggle("active");
+            shareMethods.classList.toggle('active');
             firstTime = false;
         });
 
         // Share office by link
-            linkBtn.addEventListener("click", function(e) {
-                navigator.clipboard.writeText(window.location.host + "/?office=" + encodeURIComponent(office));
-                showNotification("تم نسخ رابط المكتب بنجاح", "success")
+            linkBtn.addEventListener('click', function(e) {
+                navigator.clipboard.writeText(window.location.host + '/?office=' + encodeURIComponent(office));
+                showNotification('تم نسخ رابط المكتب بنجاح', 'success')
             });
 
         
 
-
-    let officeText = document.createElement("div");
-        officeText.setAttribute("id", "office-text");
+    // Create office text
+    let officeText = document.createElement('div');
+        officeText.setAttribute('id', 'office-text');
         officeText.innerHTML = `<span id="office-title">${office}</span>${teacher? `<span>المكتب: <span id="small-text">${teacher}</span></span>` : ""}<span>رقم الصيانة: <span id="small-text">${maintenance}</span></span>`
 
-        containerDiv.appendChild(exitBtn);      // Append Exit button
-        containerDiv.appendChild(shareBtn);     // Share button
-        containerDiv.appendChild(shareMethods); // Share methods container
-        containerDiv.appendChild(officeText);   // Office text container
+    // Appending to information container
+    containerDiv.appendChild(exitBtn);      // Append Exit button
+    containerDiv.appendChild(shareBtn);     // Share button
+    containerDiv.appendChild(shareMethods); // Share methods container
+    containerDiv.appendChild(officeText);   // Office text container
 
-    document.body.appendChild(containerDiv); // Append container to body
+    document.body.appendChild(containerDiv); // Append information container to body
 }
 
 let notificationContainer;
+
+/**
+    * @summary This function will create notification (toast notification)
+    * @param {String} message The message of notification (toast)
+    * @param {String} status The status of notification ["success", "failed", "warning"] 
+*/
 function showNotification(message, status) {
-    let notificationElement = document.createElement("div");
-        notificationElement.setAttribute("id", "notification-message");
+    let notificationElement = document.createElement('div');
+        notificationElement.setAttribute('id', 'notification-message');
         notificationElement.classList.add(status);
 
-    if(status == "success")
+    if(status == 'success')
         notificationElement.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-check-circle" viewBox="0 0 16 16"> <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/> <path d="M10.97 4.97a.235.235 0 0 0-.02.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-1.071-1.05z"/> </svg>
         <span>${message}</span>`
-    else if(status == "failed")
+    else if(status == 'failed')
         notificationElement.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-square-fill" viewBox="0 0 16 16"> <path d="M2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2zm3.354 4.646L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 1 1 .708-.708z"/> </svg> 
         <span>${message}</span>`
     else {
@@ -188,10 +233,10 @@ function showNotification(message, status) {
 
     notificationContainer.appendChild(notificationElement);
     setTimeout(function() {
-        notificationElement.style.left = "5%";
+        notificationElement.style.left = '5%';
 
         setTimeout(function() {
-            notificationElement.style.left = "-100%";
+            notificationElement.style.left = '-100%';
 
             setTimeout(function() {
                 notificationElement.remove();
@@ -200,6 +245,13 @@ function showNotification(message, status) {
     }, 5);
 }
 
+
+
+/**
+    * @summary This function will switch the floor
+    * @param {String || Integer} selectedFloor the target floor
+    * @param {boolean} isDrop Is the switch come from dropdown menu or not 
+*/
 let currentFloor = 0;
 function switchFloor(selectedFloor, isDrop) {
     if(isDrop) {
@@ -505,6 +557,10 @@ window.addEventListener("load", async function(event) {
                 showNotification("يجب عليك كتابة كلمة المرور", "warning");
             else {
                 loggingIn = true;
+                setTimeout(function() {
+                    loggingIn = false;
+                }, 5000)
+
                 let data = await fetch("/login", {
                     method: "POST",
 
@@ -520,28 +576,29 @@ window.addEventListener("load", async function(event) {
 
                     credentials: "include"
                 })
-                data = await data.json();
 
-                if(data.status == "success") {
-                    loggedIn = true;
-                    buttonsNav[2].classList.toggle("active");
+                if([200, 401].includes(data.status)) {
+                    data = await data.json();
 
-                    loginContainer.style.opacity = buttonsNav[2].classList.contains("active") ? 1 : 0;
-                    loginContainer.style["pointer-events"] = buttonsNav[2].classList.contains("active") ? "auto" : "none";
 
-                    buttonsNav[2].style.color = "red";
-                    buttonsNav[2].innerHTML = `تسجيل خروج<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-person-circle" viewBox="0 0 16 16"> <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/> <path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1z"/> </svg>`;
+                    if(data.status == "success") {
+                        loggedIn = true;
+                        buttonsNav[2].classList.toggle("active");
 
-                    navbarMenu.appendChild(viewContainer);
+                        loginContainer.style.opacity = buttonsNav[2].classList.contains("active") ? 1 : 0;
+                        loginContainer.style["pointer-events"] = buttonsNav[2].classList.contains("active") ? "auto" : "none";
 
-                    showNotification("تم تسجيل دخولك بنجاح", "success");
-                } else {
-                    showNotification("اسم المستخدم او كلمة المرور غير صحيحة", "failed");
-                }
+                        buttonsNav[2].style.color = "red";
+                        buttonsNav[2].innerHTML = `تسجيل خروج<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-person-circle" viewBox="0 0 16 16"> <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/> <path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1z"/> </svg>`;
 
-                setTimeout(function() {
-                    loggingIn = false;
-                }, 5000)
+                        navbarMenu.appendChild(viewContainer);
+
+                        showNotification("تم تسجيل دخولك بنجاح", "success");
+                    } else {
+                        showNotification("اسم المستخدم او كلمة المرور غير صحيحة", "failed");
+                    }
+                } else
+                    showNotification("يجب عليك الإنتظار قليلًا", "warning");
             }
         });
 

@@ -1,6 +1,11 @@
 import express from "express";
 import fs from "fs/promises";
+
+
 import bcrypt from "bcrypt";
+import rateLimit from 'express-rate-limit'
+
+
 
 import prompt from "prompts"
 
@@ -37,39 +42,90 @@ try {
 }
 
 
-
+/**
+ * @summary This function will compare the encrypted password with user input
+ * @param {String} password
+ * @return {String} hashed password
+*/
 async function isValidPassword(password) {
-    return await bcrypt.compare(password, userAccount.password)
+    let hashedPass = await bcrypt.compare(password, userAccount.password);
+    
+    return hashedPass;
 }
 
-authenticationRoute.post("/login", async function(req, res) {
-    if(req.session.user)
-        res.status(401).send({ status: "error", message: "You're already logged in"});
-    else {
+const loginLimit = rateLimit({
+	windowMs: 1000 * 60 * 5,
+	max: 3,
+	standardHeaders: true,
+	legacyHeaders: false,
+});
+
+
+/**
+    * POST /login
+    * @summary This route is for login of administrator account
+    * @param {String} req.params.username Username of the account
+    * @param {String} req.params.password Password of the account
+    * @return {object} 200 - success response
+    * @return {object} 401 - Bad request response
+*/
+authenticationRoute.post('/login', loginLimit, async function(req, res) {
+    if(req.session.user) { // If the the user is already logged in
+        res.status(401).send({
+            status: 'error',
+            message: 'You\'re already logged in'
+        });
+    } else {
         let username = req.body.username;
         let password = req.body.password;
 
-        if(!username || !password)
-            res.status(401).send({ status: "error", message: "Username/Password is wrong"})
-
-        if(username == userAccount.username) {
-            if(await isValidPassword(password)) {
+        
+        if(!username || !password) { // If the username or password is empty
+            res.status(401).send({
+                status: 'error',
+                message: 'Username/Password is wrong'
+            });
+        } else if(username == userAccount.username) { // If username matches administrator's username
+            if(isValidPassword(password)) { // Validate password with encrypted password
                 req.session.user = userAccount.username;
 
-                res.status(200).send({ status: "success", message: "You've been successfully logged in" })
-            } else 
-                res.status(401).send({ status: "error", message: "Username/Password is wrong"})
-        } else {
-            res.status(401).send({ status: "error", message: "Username/Password is wrong"})
+                res.status(200).send({
+                    status: 'success',
+                    message: 'You\'ve been successfully logged in'
+                });
+            } else { // If the password doesn't match encrypted password
+                res.status(401).send({
+                    status: 'error',
+                    message: 'Username/Password is wrong'
+                });
+            }
+        } else { // If the username doesn't match administrator's username
+            res.status(401).send({
+                status: 'error',
+                message: 'Username/Password is wrong'
+            });
         }
     }
 });
 
-authenticationRoute.post("/logout", function(req, res) {
+/**
+    * POST /logout
+    * @summary This route is for logout of administrator account
+    * @return {object} 200 - success response
+    * @return {object} 401 - Bad request response
+*/
+authenticationRoute.post('/logout', function(req, res) {
     if(req.session.user) { // Check if user is authenticated
-        req.session.destroy(function() {
-            res.status(200).send({ status: "success", message: "You've been logged out"})
+        req.session.destroy(function() { // Destroy the session
+            res.status(200).send({
+                status: 'success',
+                message: 'You\'ve been logged out'
+            })
         })
-    } else
-        res.status(401).send({ status: "error", message: "You're not authenticated"})
+    } else { // If user is not authenticated
+        res.status(401).send({
+            status: 'error',
+            message: 'You\'re not authenticated'
+        })
+    }
 })

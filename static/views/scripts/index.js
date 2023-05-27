@@ -8,6 +8,15 @@ let floors, dropText, mapText, searchInput, mapElement, mapContainer;
 
     let directOffice = [];
 
+function copyToClipboard(str) {
+    const el = document.createElement('textarea');
+    el.value = str;
+    document.body.appendChild(el);
+    el.select();
+    document.execCommand('copy');
+    document.body.removeChild(el);
+}
+
 /**
     * @summary This function will remove the splash screen
 */
@@ -187,7 +196,13 @@ function showInformation(office, teacher, maintenance) {
 
         // Share office by link
             linkBtn.addEventListener('click', function(e) {
-                navigator.clipboard.writeText(window.location.origin + '/?office=' + encodeURIComponent(office));
+                const sharedURL = window.location.origin + '/?office=' + encodeURIComponent(office);
+
+                if(navigator.clipboard)
+                    navigator.clipboard.writeText(sharedURL);
+                else
+                    copyToClipboard(sharedURL);
+
                 showNotification('تم نسخ رابط المكتب بنجاح', 'success')
             });
 

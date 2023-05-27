@@ -86,7 +86,7 @@ authenticationRoute.post('/login', loginLimit, async function(req, res) {
                 message: 'Username/Password is wrong'
             });
         } else if(username == userAccount.username) { // If username matches administrator's username
-            if(isValidPassword(password)) { // Validate password with encrypted password
+            if(await isValidPassword(password)) { // Validate password with encrypted password
                 req.session.user = userAccount.username;
 
                 res.status(200).send({

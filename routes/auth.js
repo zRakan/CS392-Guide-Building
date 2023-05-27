@@ -45,7 +45,7 @@ try {
 /**
  * @summary This function will compare the encrypted password with user input
  * @param {String} password
- * @return {String} hashed password
+ * @return {Promise<String>} hashed password
 */
 async function isValidPassword(password) {
     let hashedPass = await bcrypt.compare(password, userAccount.password);

@@ -115,7 +115,7 @@ body {
         gap: 10px;
     }
 
-    @media screen and ( min-width: 900px ) {
+    @media screen and ( min-width: 1920px ) {
         .map-container{ 
             width: 20%;
         }
@@ -137,8 +137,24 @@ body {
         padding-bottom: 30px;
     }
 
-    .map-container > input[type=text] {
+    .map-container .search-container {
+        width: 100%;
+        display: flex;
+        flex-direction: row;
+        column-gap: 5px;
+    }
+
+    /* Add Office */
+    .map-container .search-container #addOffice_btn {
+        cursor: pointer;
+
+        color: #2E4B58;
+    }
+
+    /* Search Input */
+    .map-container .search-container #office-search {
         direction: rtl;
+        flex: 90;
 
         width: 100%;
         height: 40px;
@@ -211,7 +227,7 @@ body {
         transform: translate(-50%, -50%);
     }
 
-    .map-elements div #office {
+    .map-elements div .office {
         cursor: pointer;
         
         
@@ -490,7 +506,7 @@ body {
     margin-top: auto;
 }
 
-#button-navbar {
+.button-navbar {
     position: relative;
 
     font-family: 'IBM Plex Sans Arabic', sans-serif;
@@ -504,7 +520,7 @@ body {
     border-bottom: 1px solid white;
 }
 
-.navbar-items #button-navbar:last-of-type {
+.navbar-items .button-navbar:last-of-type {
     margin-top: 10px;
 
     /* Transition */
@@ -512,7 +528,7 @@ body {
         transition: margin-bottom 0.5s ease-in-out, border-bottom 0.5s ease-in-out;
 }
 
-#button-navbar.active:last-of-type {
+.button-navbar.active:last-of-type {
     border-bottom: 1px solid transparent;
 
     /* Transition */
@@ -520,7 +536,7 @@ body {
         transition: margin-bottom 0.5s ease-in-out, border-bottom 0.5s ease-in-out;
 }
 
-#button-navbar > svg {
+.button-navbar > svg {
     position: absolute;
     color: white;
 
@@ -528,14 +544,14 @@ body {
     right: 5px;
 }
 
-.navbar-items #button-navbar:last-of-type > svg:nth-child(2) {
+.navbar-items .button-navbar:last-of-type > svg:nth-child(2) {
     transform: rotate(90deg);
     transition: transform .5s ease-in-out;
 
     left: 5px;
 }
 
-.navbar-items #button-navbar.active:last-of-type > svg:nth-child(2) {
+.navbar-items .button-navbar.active:last-of-type > svg:nth-child(2) {
     transform: rotate(0deg);
     transition: transform .5s ease-in-out;
 
@@ -581,14 +597,14 @@ body {
     width: 90%;
 }
 
-#username-field > span {
+#username-field > label {
     font-family: 'IBM Plex Sans Arabic', sans-serif;
     font-size: 14px;
     
     color: white;
 }
 
-#login-input {
+.login-input {
     width: 50%;
 }
 
@@ -600,7 +616,7 @@ body {
     width: 90%;
 }
 
-#password-field > span {
+#password-field > label {
     font-family: 'IBM Plex Sans Arabic', sans-serif;
     font-size: 14px;
     
@@ -865,6 +881,104 @@ body {
 .office-info #office-text > span #small-text {
     font-size: 1.2rem;
 }
+
+
+/* Add Office Container */
+.addoffice-container {
+    position: absolute;
+
+    bottom: 70px;
+
+    width: 100%;
+
+    border-radius: 10px;
+
+    height: 140px;
+
+    background-color: #2E4B58;
+}
+
+@media screen and (min-width: 1920px) {
+    .addoffice-container {
+        left: 50%;
+        transform: translate(-50%, -50%);
+
+        width: 20%;
+        height: 180px;
+    }
+}
+
+@media screen and (min-width: 768px) {
+    .addoffice-container {
+        bottom: 8%;
+        left: 50%;
+        transform: translateX(-50%);
+
+        width: 50%;
+        height: 180px;
+    }
+}
+
+.addoffice-flex {
+    position: relative;
+    direction: rtl;
+
+    width: 100%;
+    margin: auto;
+
+    top: 5px;
+
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+#addoffice-submit {
+    position: relative;
+    cursor: pointer;
+
+
+    left: 50%;
+    top: -50px;
+
+    width: 70px;
+    transform: translateX(-30%);
+
+    border-radius: 2px;
+
+    background-color: #00a4d2;
+}
+
+.addoffice-element {
+    display: flex;
+    flex-direction: column;
+    direction: rtl;
+
+    margin-right: 10px;
+}
+
+.addoffice-element > input {
+    width: 70%;
+}
+
+.addoffice-element > label {
+    font-family: 'IBM Plex Sans Arabic', sans-serif;
+    font-size: 0.7rem;
+
+    width: fit-content;
+    color: white;
+}
+
+
+
+
+
+
+
+
+
+
 
 
 /* Notification System */

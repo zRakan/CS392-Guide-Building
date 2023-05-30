@@ -1,7 +1,6 @@
 seamless.polyfill();
 
-let floors, dropText, mapText, searchInput, mapElement, mapContainer;
-
+let floors, dropText, mapText, searchInput, mapElement, mapContainer, searchContainer, addOfficeBtn;
 
 // Shared office
     let urlParams = new URLSearchParams(window.location.search);
@@ -15,6 +14,29 @@ function copyToClipboard(str) {
     el.select();
     document.execCommand('copy');
     document.body.removeChild(el);
+}
+
+
+// Switch Mode
+let _switchMode = false;
+function switchMode(isAdmin) {
+    _switchMode = isAdmin || !_switchMode;
+
+    let hiddenRooms = document.querySelectorAll(".map-elements .office[data-hidden]");
+    for(let room in hiddenRooms) {
+        if(typeof(hiddenRooms[room]) == "object") {
+            let hiddenDiv = hiddenRooms[room];
+
+            hiddenDiv.style.opacity = _switchMode ? 1 : 0;
+            hiddenDiv.style["pointer-events"] = _switchMode ? "auto" : "none";
+        }
+    }
+
+    if(_switchMode) { // is administrator mode
+        searchContainer.insertBefore(addOfficeBtn, searchContainer.firstChild);
+    } else { // is visitor mode
+        searchContainer.removeChild(addOfficeBtn);
+    }
 }
 
 /**
@@ -121,7 +143,7 @@ function showQR(containerDiv, office) {
     * @param {String} teacher Teacher name
     * @param {String} maintenance Maintenance number 
 */
-function showInformation(office, teacher, maintenance) {
+function showInformation(office, teacher, maintenance, hidden) {
     // Blur Background
     mapContainer.style.filter = 'blur(0.2rem)';
     mapContainer.style['pointer-events']  = 'none'; // Prevent clicking map container
@@ -292,10 +314,103 @@ function switchFloor(selectedFloor, isDrop) {
         mapText.innerHTML = floorText;
 }
 
+async function addOffices(onlyHidden) {
+    let offices = await fetch("/map/offices");
+        offices = await(offices.json());
+
+        for(let floor in offices) {
+            let officeList = offices[floor];
+
+            let leftMax = 0;
+            let leftWidth;
+            for(let office in officeList) {
+                if(onlyHidden && !officeList[office].hidden) continue; // Ignore non-hidden offices
+
+                let div = document.createElement("div");
+                    div.setAttribute("class", "office");
+
+                    if(officeList[office].hidden)
+                        div.setAttribute("data-hidden", "true");
+
+                // Positioning
+                    div.style.position = "absolute";
+                    div.style.left = officeList[office].left ? officeList[office].left : "0px";
+                    div.style.top = officeList[office].top ? officeList[office].top : "0px";
+
+                    let leftP = officeList[office].left ? parseInt((officeList[office].left).slice(0, -2), 10) : 0;
+                    let leftW = parseInt((officeList[office].width).slice(0, -2), 10);
+                    
+                    div.style.width = officeList[office].width;
+                    div.style.height = officeList[office].height;
+                    
+                    if(officeList[office].hidden) {
+                        div.style["background-color"] = "#00C8F8";
+                        div.style["border-color"] = "#0092B8";
+                    }
+
+
+                    if(!leftMax){
+                        leftMax = leftP;
+                        leftWidth = leftW;
+                    } else if(leftP > leftMax) {
+
+                        // Don't change even if left bigger than old
+                        // This will calculate total width&left to make sure it's bigger than old one
+                        if(leftP + leftW > leftMax + leftWidth) {
+                            leftMax = leftP;
+                            leftWidth = leftW;
+                        }
+                    } else if(leftP == leftMax) {
+                        if(leftWidth < officeList[office].width)
+                            leftWidth = officeList[office].width;
+                    }
+
+                div.innerHTML = office;
+
+                div.addEventListener("click", async function() {
+                    let officeResp = await fetch("/map/office/" + floor + "/"+ office);
+                    officeResp = await officeResp.json();
+
+                    if(officeResp.error) return;
+
+                    showInformation(office, officeResp.teacher, officeResp.maintenance, officeList[office].hidden);
+                });
+                
+                floors[floor].appendChild(div);
+
+                if(urlParams.get("office") == office && directOffice.length == 0) {
+                    let officeResp = await fetch("/map/office/" + floor + "/"+ office);
+                    officeResp = await officeResp.json();
+
+                    if(officeResp.error) return;
+
+                    directOffice = [officeResp.teacher, officeResp.maintenance, parseInt(floor, 10), div]
+                }
+            }
+
+            if(floors[floor].scrollHeight-50 > floors[floor].clientWidth) {
+                let paddingRight = document.createElement("div");
+
+                //console.log(leftWidth, floor);
+
+                paddingRight.style.position = "absolute";
+                paddingRight.style.left = leftMax + "px";
+
+                paddingRight.style.height = "1px";
+
+                // Offset: width + 5 padding
+                    paddingRight.style["padding-right"] = (leftWidth + 10) + "px";
+
+                floors[floor].appendChild(paddingRight);
+            }
+        }
+}
+
 window.addEventListener("load", async function(event) {
     // Elements
         // Navbar
             const navbarBtn = document.getElementById("navbar-click"),
+                navbarItems = document.querySelector('.navbar-items');
                 navbarMenu = document.querySelector(".navbar");
                 mapContainer = document.querySelector(".map-container");
 
@@ -311,6 +426,249 @@ window.addEventListener("load", async function(event) {
 
         // Search offices
             searchInput = document.getElementById("office-search");
+            searchContainer = document.querySelector(".search-container");
+
+        // Add Office
+            // Creating Add Office btn
+            addOfficeBtn = document.createElement("button");
+            addOfficeBtn.setAttribute("type", "button");
+            addOfficeBtn.setAttribute("id", "addOffice_btn");
+            addOfficeBtn.setAttribute("title", "إضافة مكتب جديد");
+            
+            // Event for add office
+            const addContainer = document.createElement("div");
+                    addContainer.setAttribute("class", "addoffice-container");
+
+                    addContainer.innerHTML = `<div class="addoffice-flex">
+
+                    <div class="addoffice-element">
+                        <label for="office-name">اسم المكتب & صاحب المكتب</label>
+                        <input type="text" name="office-name">
+                    </div>
+    
+                    <div class="addoffice-element">
+                        <label for="office-number">رقم المكتب</label>
+                        <input type="text" name="office-number">
+                    </div>
+    
+                    <div class="addoffice-element">
+                        <label for="maintenance-number">رقم الصيانة</label>
+                        <input type="text" name="maintenance-number">
+                    </div>
+    
+                    <div class="addoffice-element">
+                        <label for="floor-number">رقم الطابق</label>
+                        <input type="text" name="floor-number" placeholder="رقم الطابق (1-4)">
+                    </div>
+    
+                    <div class="addoffice-element">
+                        <label for="office-position">مكان المكتب</label>
+    
+                        <input type="text" name="office-position" placeholder="الطول">
+                        <input type="text" name="office-position" placeholder="العرض">
+                    </div>
+    
+                    <div class="addoffice-element">
+                        <label for="office-size">حجم المكتب</label>
+                        
+                        <input type="text" name="office-size" placeholder="الطول">
+                        <input type="text" name="office-size" placeholder="العرض">
+                    </div>
+                </div>`
+
+
+
+            let addOfficeSubmit = document.createElement("button");
+                addOfficeSubmit.innerHTML = "تأكيد";
+                addOfficeSubmit.setAttribute("id", "addoffice-submit");
+
+                // Event listener
+                let officeViewer = document.createElement("div");
+                officeViewer.setAttribute("class", "office");
+                officeViewer.style.position = "absolute";
+
+                officeViewer.style.left = "50px";
+                officeViewer.style.top = "50px";
+                officeViewer.style.width = "50px";
+                officeViewer.style.height = "50px";
+
+                officeViewer.style["background-color"] = "red";
+
+
+                addOfficeSubmit.addEventListener("click", async function(e) {
+                    let officeName = document.querySelector('.addoffice-element > input[name="office-name"]').value;
+                    let officeNumber = document.querySelector('.addoffice-element > input[name="office-number"]').value;
+                    let maintenanceNumber = document.querySelector('.addoffice-element > input[name="maintenance-number"]').value;
+                    let floorNumber = document.querySelector('.addoffice-element > input[name="floor-number"]').value;
+                    let position = document.querySelectorAll('.addoffice-element input[name="office-position"]');
+                        const positionTop = position[0].value;
+                        const positionLeft = position[1].value;
+
+                    let size = document.querySelectorAll('.addoffice-element input[name="office-size"]');
+                        const sizeWidth = size[0].value;
+                        const sizeHeight = size[1].value;
+
+                    if(!officeName) {
+                        showNotification("يجب عليك كتابة اسم المكتب", "failed");
+                        return;
+                    }
+
+                    if(!officeNumber) {
+                        showNotification("يجب عليك كتابة رقم المكتب", "failed");
+                        return;
+                    }
+
+                    if(!maintenanceNumber) {
+                        showNotification("يجب عليك كتابة رقم الصيانة", "failed");
+                        return;
+                    }
+
+                    if(!floorNumber) {
+                        showNotification("يجب عليك كتابة رقم الطابق", "failed");
+                        return;
+                    } else if(floorNumber < '1' || floorNumber > '4') {
+                        showNotification("الطوابق المتاحة من 1 إلى 4", "failed");
+                        return;
+                    }
+
+                    if(!positionTop || !positionLeft) {
+                        showNotification("يجب عليك كتابة مكان المكتب", "failed");
+                        return;
+                    }
+                    
+                    if(!sizeWidth || !sizeHeight) {
+                        showNotification("يجب عليك كتابة حجم المكتب", "failed");
+                        return;
+                    }
+
+
+                    let resp = await fetch("/map/office/add", {
+                        method: "POST",
+
+                        headers: {
+                            Accept: "application/json",
+                            "Content-Type": "application/json",
+                        },
+    
+                        body: JSON.stringify({
+                            officeName,
+                            officeNumber,
+                            maintenanceNumber,
+                            floorNumber,
+                            position: [positionTop, positionLeft],
+                            size: [sizeWidth, sizeHeight],
+                        }),
+                    });
+                    resp = await resp.json();
+
+                    if(resp.status == "success") {
+                        let tempOffice = officeViewer.cloneNode(true);
+                        tempOffice.style["background-color"] = "#ebebeb";
+                        floors[currentFloor].appendChild(tempOffice);
+                        showNotification("تم إضافة المكتب بنجاح", "success");
+                    } else {
+                        showNotification(resp.message, "failed");
+                    }
+                });
+
+                addContainer.appendChild(addOfficeSubmit);
+                let floorNumber = addContainer.querySelector('.addoffice-element > input[name="floor-number"]');
+
+                
+                floorNumber.addEventListener("input", function(e) {
+                    if(e.data) {
+                        if(e.data < '1' || e.data > '4')
+                            showNotification("الطوابق المتاحة من 1 إلى 4", "failed");
+                    }
+                });
+                floorNumber.addEventListener("keypress", function(e) {
+                    let floor = e.key;
+                    if(floor < 1 || floor > 4 || floorNumber.value) {
+                        e.preventDefault();
+                        showNotification("الطوابق المتاحة من 1 إلى 4", "failed");
+                        return;
+                    }
+
+                    floors[currentFloor].removeChild(officeViewer);
+                    switchFloor(parseInt(floor, 10) - 1);
+                    floors[currentFloor].appendChild(officeViewer);
+                });
+
+                let officeNumber = addContainer.querySelector('.addoffice-element > input[name="office-number"]')
+                let position = addContainer.querySelectorAll('.addoffice-element input[name="office-position"]');
+                let size = addContainer.querySelectorAll('.addoffice-element input[name="office-size"]');
+
+                position.forEach(function(pos) {
+                    pos.addEventListener("keypress", function(e) {
+                        if(e.key < '0' || e.key > '9'){
+                            e.preventDefault();
+                            showNotification("يجب عليك كتابة ارقام فقط", "failed");
+                        }
+                    });
+
+                    pos.addEventListener("input", function(e) {
+                        if(e.data) {
+                            if(e.key < '0' || e.key > '9')
+                                showNotification("يجب عليك كتابة ارقام فقط", "failed");
+                        }
+                    });
+                });
+                size.forEach(function(siz) {
+                    siz.addEventListener("keypress", function(e) {
+                        if(e.key < '0' || e.key > '9'){
+                            e.preventDefault();
+                            showNotification("يجب عليك كتابة ارقام فقط", "failed");
+                        }
+                    });
+
+                    siz.addEventListener("input", function(e) {
+                        if(e.data) {
+                            if(e.key < '0' || e.key > '9')
+                                showNotification("يجب عليك كتابة ارقام فقط", "failed");
+                        }
+                    });
+                });
+
+                // Office generator
+                // position[0] => height
+                // position[1] => width
+                position[0].addEventListener("input", function(e) {
+                    officeViewer.style.top = (position[0].value ? position[0].value : "50") + "px";
+                });
+
+                position[1].addEventListener("input", function(e) {
+                    officeViewer.style.left = (position[1].value ? position[1].value : "50") + "px";
+                });
+
+                size[0].addEventListener("input", function(e) {
+                    officeViewer.style.height = (size[0].value ? size[0].value : "50") + "px";
+                });
+
+                size[1].addEventListener("input", function(e) {
+                    officeViewer.style.width = (size[1].value ? size[1].value : "50") + "px";
+                });
+
+
+                officeNumber.addEventListener("input", function(e) {
+                    officeViewer.innerHTML = officeNumber.value ? officeNumber.value : "";
+                });
+
+            
+            let addMenu = false;
+            addOfficeBtn.addEventListener("click", function(e) {
+                addMenu = !addMenu;
+                
+                // Addoffice Container
+                if(addMenu)
+                    (addContainer.querySelector('.addoffice-element > input[name="floor-number"]')).setAttribute("value", currentFloor+1);
+
+                addMenu ? document.body.appendChild(addContainer) : document.body.removeChild(addContainer);
+
+
+                addMenu ? floors[currentFloor].appendChild(officeViewer) : floors[currentFloor].removeChild(officeViewer);
+            });
+
+            addOfficeBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-plus-circle-fill" viewBox="0 0 16 16"> <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM8.5 4.5a.5.5 0 0 0-1 0v3h-3a.5.5 0 0 0 0 1h3v3a.5.5 0 0 0 1 0v-3h3a.5.5 0 0 0 0-1h-3v-3z"/> </svg>';
 
         // Offices Container
             mapElement = document.querySelector(".map-elements");
@@ -327,89 +685,11 @@ window.addEventListener("load", async function(event) {
             notificationContainer = document.querySelector(".notification-container");
 
     // Create offices in each floor
-        let offices = await fetch("/map/offices");
-            offices = await(offices.json());
+        addOffices();
 
-            for(let floor in offices) {
-                let officeList = offices[floor];
-
-                let leftMax = 0;
-                let leftWidth;
-                for(let office in officeList) {
-                    let div = document.createElement("div");
-                        div.setAttribute("id", "office");
-
-                    // Positioning
-                        div.style.position = "absolute";
-                        div.style.left = officeList[office].left ? officeList[office].left : "0px";
-                        div.style.top = officeList[office].top ? officeList[office].top : "0px";
-
-                        let leftP = officeList[office].left ? parseInt((officeList[office].left).slice(0, -2), 10) : 0;
-                        let leftW = parseInt((officeList[office].width).slice(0, -2), 10);
-                        
-                        div.style.width = officeList[office].width;
-                        div.style.height = officeList[office].height;
-
-
-                        if(!leftMax){
-                            leftMax = leftP;
-                            leftWidth = leftW;
-                        } else if(leftP > leftMax) {
-
-                            // Don't change even if left bigger than old
-                            // This will calculate total width&left to make sure it's bigger than old one
-                            if(leftP + leftW > leftMax + leftWidth) {
-                                leftMax = leftP;
-                                leftWidth = leftW;
-                            }
-                        } else if(leftP == leftMax) {
-                            if(leftWidth < officeList[office].width)
-                                leftWidth = officeList[office].width;
-                        }
-
-                    div.innerHTML = office;
-
-                    div.addEventListener("click", async function() {
-                        let officeResp = await fetch("/map/office/" + floor + "/"+ office);
-                        officeResp = await officeResp.json();
-
-                        if(officeResp.error) return;
-
-                        showInformation(office, officeResp.teacher, officeResp.maintenance);
-                    });
-                    
-                    floors[floor].appendChild(div);
-
-                    if(urlParams.get("office") == office && directOffice.length == 0) {
-                        let officeResp = await fetch("/map/office/" + floor + "/"+ office);
-                        officeResp = await officeResp.json();
-
-                        if(officeResp.error) return;
-
-                        directOffice = [officeResp.teacher, officeResp.maintenance, parseInt(floor, 10), div]
-                    }
-                }
-
-                if(floors[floor].scrollHeight-50 > floors[floor].clientWidth) {
-                    let paddingRight = document.createElement("div");
-
-                    //console.log(leftWidth, floor);
-
-                    paddingRight.style.position = "absolute";
-                    paddingRight.style.left = leftMax + "px";
-
-                    paddingRight.style.height = "1px";
-
-                    // Offset: width + 5 padding
-                        paddingRight.style["padding-right"] = (leftWidth + 10) + "px";
-
-                    floors[floor].appendChild(paddingRight);
-                }
-            }
-
-            for(let i = 1; i < floors.length; i++) { // Hide other floors
-                floors[i].style.display = "none"
-            }
+        for(let i = 1; i < floors.length; i++) { // Hide other floors
+            floors[i].style.display = "none"
+        }
 
 
         // Navbar
@@ -502,7 +782,7 @@ window.addEventListener("load", async function(event) {
 
     // Authentication System
         // Elements
-            let buttonsNav = document.querySelectorAll("#button-navbar");
+            let buttonsNav = document.querySelectorAll(".button-navbar");
             let loginContainer = document.querySelector(".login-container");
             let submitBtn = document.getElementById("login-submit");
             let userField = document.querySelector("#username-field > input");
@@ -519,6 +799,10 @@ window.addEventListener("load", async function(event) {
                 viewSwitcher.setAttribute("type", "checkbox");
                 viewSwitcher.setAttribute("id", "viewmode-switcher");
                 viewSwitcher.checked = true; // Switcher is enabled
+
+                viewSwitcher.addEventListener("change", function() {
+                    switchMode();
+                })
 
             let viewText = document.createElement("span");
                 viewText.innerHTML = "نمط الإداري"
@@ -554,7 +838,8 @@ window.addEventListener("load", async function(event) {
                         buttonsNav[2].style.color = "white";
                         buttonsNav[2].innerHTML = `تسجيل الدخول<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-person-circle" viewBox="0 0 16 16"> <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/> <path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1z"/> </svg><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M16.293 9.293L12 13.586L7.707 9.293l-1.414 1.414L12 16.414l5.707-5.707z"/></svg>`
                         
-                        navbarMenu.removeChild(viewContainer);
+                        switchMode();
+                        navbarItems.removeChild(viewContainer);
 
                         showNotification("تم تسجيل خروجك بنجاح", "success");
                     } else {
@@ -600,13 +885,17 @@ window.addEventListener("load", async function(event) {
                         loggedIn = true;
                         buttonsNav[2].classList.toggle("active");
 
-                        loginContainer.style.opacity = buttonsNav[2].classList.contains("active") ? 1 : 0;
-                        loginContainer.style["pointer-events"] = buttonsNav[2].classList.contains("active") ? "auto" : "none";
+                        loginContainer.style.opacity = 0;
+                        loginContainer.style["pointer-events"] = "none";
 
                         buttonsNav[2].style.color = "red";
                         buttonsNav[2].innerHTML = `تسجيل خروج<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-person-circle" viewBox="0 0 16 16"> <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/> <path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1z"/> </svg>`;
 
-                        navbarMenu.appendChild(viewContainer);
+                        switchMode(true);
+
+                        addOffices(true);
+                        
+                        navbarItems.appendChild(viewContainer);
 
                         showNotification("تم تسجيل دخولك بنجاح", "success");
                     } else {
@@ -627,7 +916,8 @@ window.addEventListener("load", async function(event) {
             buttonsNav[2].style.color = "red";
             buttonsNav[2].innerHTML = `تسجيل خروج<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-person-circle" viewBox="0 0 16 16"> <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/> <path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1z"/> </svg>`;
 
-            navbarMenu.appendChild(viewContainer);
+            switchMode(true);
+            navbarItems.appendChild(viewContainer);
         }
 
 
@@ -675,7 +965,6 @@ window.addEventListener("load", async function(event) {
         mapElement.scrollLeft = scrollPos[0] - ((e.pageX - mapElement.offsetLeft) - startPos[0]);
         mapElement.scrollTop = scrollPos[1] - ((e.pageY - mapElement.offsetTop) - startPos[1]);
     });
-
 
     // Page loaded [Hiding loading screen]
         loaded();

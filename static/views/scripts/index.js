@@ -230,16 +230,21 @@ function showInformation(office, teacher, maintenance, hidden, floor) {
                             containerDiv.classList.toggle('active');
             
                             setTimeout(function() {
-                                console.log(floors[currentFloor].children);
+                                let childOffices = floors[currentFloor].children;
 
+                                for(let child in childOffices) {
+                                    let div = childOffices[child];
+                                    if(typeof(div) == "object") {
+                                        if(div.innerHTML == office)
+                                            floors[currentFloor].removeChild(div);
+                                    }
+                                }
                                 document.body.removeChild(containerDiv); // Removing this container
                             }, 1000);
                         }
                     }
                     
-
                     
-                    console.log(data);
                 }
             })
 
@@ -385,8 +390,9 @@ function switchFloor(selectedFloor, isDrop) {
         mapText.innerHTML = floorText;
 }
 
+let offices;
 async function addOffices(onlyHidden) {
-    let offices = await fetch("/map/offices");
+        offices = await fetch("/map/offices");
         offices = await(offices.json());
 
         for(let floor in offices) {
@@ -635,13 +641,14 @@ window.addEventListener("load", async function(event) {
                     if(resp.status == "success") {
                         let tempOffice = officeViewer.cloneNode(true);
                         
+                        floorNumber = (parseInt(floorNumber, 10) - 1) + "";
                         tempOffice.addEventListener("click", async function(e) {
                             let officeResp = await fetch("/map/office/" + floorNumber + "/"+ officeNumber);
                             officeResp = await officeResp.json();
         
                             if(officeResp.error) return;
         
-                            showInformation(office, officeResp.teacher, officeResp.maintenance, officeList[office].hidden, floorNumber);
+                            showInformation(officeNumber, officeResp.teacher, officeResp.maintenance, false, floorNumber);
                         });
 
                         tempOffice.style["background-color"] = "#ebebeb";

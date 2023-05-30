@@ -13,6 +13,10 @@ try {
     fs.writeFile("data.json", "[]");
 }
 
+function saveToJson() {
+    fs.writeFile("data.json", JSON.stringify(offices, null, 2));
+}
+
 // Filtering info
 let officesList = [];
 let infoList =  [];
@@ -62,7 +66,7 @@ mapRoute.get('/office/:floor/:office_id', function(req, res) {
 
 
     if(floor < '0' || floor > '3') { // If floor is not in [0, 3]
-        res.status(400).send({ error: 'Floor is not found' });
+        res.status(400).send({ status: "error", message: 'Floor is not found' });
         return;
     }
 
@@ -70,13 +74,13 @@ mapRoute.get('/office/:floor/:office_id', function(req, res) {
 
     const isHidden = Object.keys(hiddenOffices[floor]).includes(officeId)
     if(!Object.keys(officesList[floor]).includes(officeId) && !isHidden) { // If office not in floor
-        res.status(400).send({ error: 'Office is not found' });
+        res.status(400).send({ status: "error", message: 'Office is not found' });
         return;
     }
 
     // Check if room is hidden and the requester is admin
     if(isHidden && !req.session.user) {
-        res.status(400).send({ error: 'Office is not found' });
+        res.status(400).send({ status: "error", message: 'Office is not found' });
         return;
     }
 
@@ -91,6 +95,116 @@ mapRoute.get('/office/:floor/:office_id', function(req, res) {
     }
 });
 
+// Remove office
+mapRoute.post("/office/remove", function(req, res) {
+    if(req.session.user) {
+        let floorNumber = req.body.floorNumber;
+
+        console.log(req.body);
+
+        if(floorNumber < '1' || floorNumber > '4') {
+            res.status(401).send({ status: "error", message: "Floor is not found" });
+            return;
+        }
+        floorNumber = parseInt(floorNumber, 10)-1; // Parsing to integer
+
+        let officeNumber = req.body.officeNumber;
+        if(!Object.keys(offices[floorNumber]).includes(officeNumber)){
+            res.status(401).send({ status: "error", message: 'Office is not found' });
+            return;
+        }
+
+        delete offices[floorNumber][officeNumber];
+        delete officesList[floorNumber][officeNumber];
+        delete infoList[floorNumber][officeNumber];
+
+        saveToJson();
+        
+        res.status(200).send({ status: "success", message: "Office deleted" });
+    } else
+        res.status(401).send({ status: "error", message: "Unauthorized access" });
+});
+
+// Edit office
+mapRoute.post("/office/edit", function(req, res) {
+    if(req.session.user) {
+        let floorNumber = req.body.floorNumber;
+        if(floorNumber < '1' || floorNumber > '4') {
+            res.status(401).send({ status: "error", message: "Floor is not found" });
+            return;
+        }
+        floorNumber = parseInt(floorNumber, 10); // Parsing to integer
+        
+        let editedOffice = req.body.editedOffice;
+        let officeNumber = req.body.officeNumber;
+        let officeName = req.body.officeName;
+        let officeMaintenance = req.body.officeMaintenance;
+
+        if(!Object.keys(offices[floor]).includes(editedOffice)){
+            res.status(401).send({ status: "error", message: 'Office is not found' });
+            return;
+        }
+
+        if(editedOffice == officeNumber) { // Editing same office
+            offices[floor][officeNumber] = {
+                hidden: offices[floor][editedOffice].hidden,
+                info: [ officeName, officeMaintenance ],
+
+                width: offices[floor][editedOffice].width,
+                height: offices[floor][editedOffice].height,
+                
+                top: offices[floor][editedOffice].top,
+                left: offices[floor][editedOffice].left,
+            }
+
+            officesList[floor][officeNumber] = {
+                hidden: offices[floor][editedOffice].hidden, 
+
+                width: offices[floor][editedOffice].width,
+                height: offices[floor][editedOffice].height,
+                
+                top: offices[floor][editedOffice].top,
+                left: offices[floor][editedOffice].left,
+            }
+
+            infoList[floor][officeNumber]= {
+                info: [officeName, officeMaintenance ],
+            }
+        } else { // Change office number
+            offices[floor][officeNumber] = {
+                hidden: offices[floor][editedOffice].hidden,
+                info: [ officeName, officeMaintenance ],
+
+                width: offices[floor][editedOffice].width,
+                height: offices[floor][editedOffice].height,
+                
+                top: offices[floor][editedOffice].top,
+                left: offices[floor][editedOffice].left,
+            }
+
+            officesList[floor][officeNumber] = {
+                hidden: offices[floor][editedOffice].hidden, 
+
+                width: offices[floor][editedOffice].width,
+                height: offices[floor][editedOffice].height,
+                
+                top: offices[floor][editedOffice].top,
+                left: offices[floor][editedOffice].left,
+            }
+
+            infoList[floor][officeNumber]= {
+                info: [officeName, officeMaintenance ],
+            }
+
+            delete offices[floor][editedOffice];
+            delete officesList[floor][editedOffice];
+            delete infoList[floor][editedOffice];
+        }
+    } else
+        res.status(401).send({ status: "error", message: "Unauthorized access" });
+});
+
+// Add new office
 mapRoute.post("/office/add", function(req, res) {
     if(req.session.user) {
         let floorNumber = req.body.floorNumber;
@@ -111,7 +225,7 @@ mapRoute.post("/office/add", function(req, res) {
             let posTop = parseInt(pos[0], 10);
             let posLeft = parseInt(pos[1], 10);
 
-            if(isNaN(posTop) || isNaN(posLeft)){
+            if(isNaN(posTop) || isNaN(posLeft)) {
                 res.status(401).send({ status: "error", message: "Position is invalid" });
                 return;
             }
@@ -119,7 +233,7 @@ mapRoute.post("/office/add", function(req, res) {
             let sizeHeight = parseInt(size[0], 10);
             let sizeWidth = parseInt(size[1], 10);
 
-            if(isNaN(sizeHeight) || isNaN(sizeWidth)){
+            if(isNaN(sizeHeight) || isNaN(sizeWidth)) {
                 res.status(401).send({ status: "error", message: "Size is invalid" });
                 return;
             }
@@ -133,6 +247,9 @@ mapRoute.post("/office/add", function(req, res) {
                 top: posTop + "px",
                 left: posLeft + "px"
             }
+
+            // Save to JSON
+            saveToJson();
 
             officesList[floorNumber-1][officeNumber] = {                
                 width: sizeWidth + "px",

@@ -54,7 +54,7 @@ function loaded() {
             if(directOffice.length > 0) {
                 switchFloor(directOffice[2]);
                 directOffice[3].scrollIntoView({ block: 'nearest', inline: 'center' });
-                showInformation(urlParams.get("office"), directOffice[0], directOffice[1]);
+                showInformation(urlParams.get("office"), directOffice[0], directOffice[1], directOffice[3].getAttribute("data-hidden"), directOffice[2]);
             }
         }, 1000)
 }
@@ -143,7 +143,7 @@ function showQR(containerDiv, office) {
     * @param {String} teacher Teacher name
     * @param {String} maintenance Maintenance number 
 */
-function showInformation(office, teacher, maintenance, hidden) {
+function showInformation(office, teacher, maintenance, hidden, floor) {
     // Blur Background
     mapContainer.style.filter = 'blur(0.2rem)';
     mapContainer.style['pointer-events']  = 'none'; // Prevent clicking map container
@@ -175,6 +175,77 @@ function showInformation(office, teacher, maintenance, hidden) {
                 }, 1000);
             }
         });
+
+    if(_switchMode) { // If in administrator mode
+        if(!hidden) {
+            let visibilityText = document.createElement("div");
+                visibilityText.setAttribute("id", "visiblity-info");
+                visibilityText.innerHTML = "الغرفة ظاهرة للجميع";
+
+            containerDiv.appendChild(visibilityText);
+        }
+
+        let editBtn = document.createElement('button')
+            editBtn.setAttribute('id', 'edit-btn');
+            editBtn.setAttribute('type', 'button');
+            editBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-pencil-fill" viewBox="0 0 16 16"> <path d="M12.854.146a.5.5 0 0 0-.707 0L10.5 1.793 14.207 5.5l1.647-1.646a.5.5 0 0 0 0-.708l-3-3zm.646 6.061L9.793 2.5 3.293 9H3.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.207l6.5-6.5zm-7.468 7.468A.5.5 0 0 1 6 13.5V13h-.5a.5.5 0 0 1-.5-.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.5-.5V10h-.5a.499.499 0 0 1-.175-.032l-.179.178a.5.5 0 0 0-.11.168l-2 5a.5.5 0 0 0 .65.65l5-2a.5.5 0 0 0 .168-.11l.178-.178z"/> </svg>';
+
+        let removeBtn = document.createElement('button')
+            removeBtn.setAttribute('id', 'remove-btn');
+            removeBtn.setAttribute('type', 'button');
+            removeBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-trash-fill" viewBox="0 0 16 16"> <path d="M2.5 1a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1H3v9a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V4h.5a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H10a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1H2.5zm3 4a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 .5-.5zM8 5a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7A.5.5 0 0 1 8 5zm3 .5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 1 0z"/> </svg>';
+
+            let confirm = false;
+            let deleted = false;
+            removeBtn.addEventListener("click", async function(e) {
+                if(!confirm) {
+                    confirm = true;
+                    showNotification("اضغط على زر الحذف مرة أخرى للتأكيد", "warning");
+
+                    setTimeout(function() {
+                        confirm = false;
+                    }, 1500)
+                } else {
+                    if(!deleted) {
+                        deleted = true;
+                        let data = await fetch("/map/office/remove", {
+                            method: "POST",
+
+                            headers: {
+                                Accept: "application/json",
+                                "Content-Type": "application/json",
+                            },
+        
+                            body: JSON.stringify({
+                                officeNumber: office,
+                                floorNumber: (parseInt(floor,10) + 1) + ""
+                            }),
+                        });
+                        
+                        if(data.status == 200) {
+                            showNotification("تم حذف المكتب بنجاح", "success");
+                            mapContainer.style.filter = 'none';
+                            mapContainer.style['pointer-events']  = 'auto';  
+                            
+                            containerDiv.classList.toggle('active');
+            
+                            setTimeout(function() {
+                                console.log(floors[currentFloor].children);
+
+                                document.body.removeChild(containerDiv); // Removing this container
+                            }, 1000);
+                        }
+                    }
+                    
+
+                    
+                    console.log(data);
+                }
+            })
+
+        containerDiv.appendChild(editBtn);
+        containerDiv.appendChild(removeBtn);
+    }
 
     // Create Share Button
     let shareBtn = document.createElement('button')
@@ -373,7 +444,7 @@ async function addOffices(onlyHidden) {
 
                     if(officeResp.error) return;
 
-                    showInformation(office, officeResp.teacher, officeResp.maintenance, officeList[office].hidden);
+                    showInformation(office, officeResp.teacher, officeResp.maintenance, officeList[office].hidden, floor);
                 });
                 
                 floors[floor].appendChild(div);
@@ -563,6 +634,16 @@ window.addEventListener("load", async function(event) {
 
                     if(resp.status == "success") {
                         let tempOffice = officeViewer.cloneNode(true);
+                        
+                        tempOffice.addEventListener("click", async function(e) {
+                            let officeResp = await fetch("/map/office/" + floorNumber + "/"+ officeNumber);
+                            officeResp = await officeResp.json();
+        
+                            if(officeResp.error) return;
+        
+                            showInformation(office, officeResp.teacher, officeResp.maintenance, officeList[office].hidden, floorNumber);
+                        });
+
                         tempOffice.style["background-color"] = "#ebebeb";
                         floors[currentFloor].appendChild(tempOffice);
                         showNotification("تم إضافة المكتب بنجاح", "success");

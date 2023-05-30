@@ -706,6 +706,37 @@ body {
     bottom: 0px;
 }
 
+#visiblity-info {
+    position: absolute;
+
+    left: 5%;
+    top: 5%;
+
+    font-family: 'IBM Plex Sans Arabic', sans-serif;
+    font-size: 0.7rem;
+
+    color: red;
+}
+
+#remove-btn {
+	position: absolute;
+	cursor: pointer;
+
+	bottom: 5%;
+	right: 20%;
+
+	color: red;
+}
+
+#edit-btn {
+	position: absolute;
+	cursor: pointer;
+
+	bottom: 5%;
+	right: 5%;
+
+	color: #e4ac05;
+}
 
 /* Office Information */
 .office-info.active {

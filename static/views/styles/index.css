@@ -241,6 +241,11 @@ body {
         line-height: 40px;
     }
 
+    .map-elements div .office[data-hidden] {
+        background-color: #00C8F8;
+        border-color: #0092B8;
+    }
+
 /* Dropdown menu */
     @keyframes fadeInUp {
         from {
@@ -955,27 +960,65 @@ body {
     direction: rtl;
 
     width: 100%;
-    margin: auto;
 
     top: 5px;
 
     display: flex;
     flex-wrap: wrap;
-    flex-direction: row;
     justify-content: space-between;
+
 }
 
-#addoffice-submit {
-    position: relative;
-    cursor: pointer;
+.addoffice-flex > div {
+    flex: 0 32%;
+}
 
+.addoffice-center {
+    position: relative;
+
+    display: flex;
+    flex-direction: column;
+    row-gap: 5px;
+
+    text-align: center;
 
     left: 50%;
     top: -50px;
-
-    width: 70px;
     transform: translateX(-30%);
 
+    width: fit-content;
+}
+
+@media screen and (min-width: 1498px) {
+    .addoffice-center {
+        top: 15px;
+    }
+}
+
+.editoffice-btn-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+
+    column-gap: 2px;
+}
+
+.addoffice-hideSwitcher {
+    display: flex;
+    flex-direction: row;
+    column-gap: 5px;
+}
+
+.addoffice-hideSwitcher > label {
+    font-family: 'IBM Plex Sans Arabic', sans-serif;
+    font-size: 0.7rem;
+
+    width: fit-content;
+    color: white;
+}
+
+#addoffice-submit {
+    cursor: pointer;
     border-radius: 2px;
 
     background-color: #00a4d2;

@@ -27,7 +27,7 @@ for(let floor in offices){
     hiddenOffices.push({});
     for(let office in offices[floor]) {
         if(offices[floor][office].hidden)
-            hiddenOffices[floor][office] = offices[floor][office];
+            hiddenOffices[floor][office] = true;
         else
             officesList[floor][office] = (({info, ...a}) => a)(offices[floor][office])
 
@@ -48,7 +48,6 @@ mapRoute.get('/offices', function(req, res) {
     } else {
         res.status(200).send(officesList);
     }
-
 });
 
 
@@ -100,8 +99,6 @@ mapRoute.post("/office/remove", function(req, res) {
     if(req.session.user) {
         let floorNumber = req.body.floorNumber;
 
-        console.log(req.body);
-
         if(floorNumber < '1' || floorNumber > '4') {
             res.status(401).send({ status: "error", message: "Floor is not found" });
             return;
@@ -133,73 +130,86 @@ mapRoute.post("/office/edit", function(req, res) {
             res.status(401).send({ status: "error", message: "Floor is not found" });
             return;
         }
-        floorNumber = parseInt(floorNumber, 10); // Parsing to integer
+        floorNumber = parseInt(floorNumber, 10) - 1; // Parsing to integer
         
         let editedOffice = req.body.editedOffice;
         let officeNumber = req.body.officeNumber;
         let officeName = req.body.officeName;
         let officeMaintenance = req.body.officeMaintenance;
 
-        if(!Object.keys(offices[floor]).includes(editedOffice)){
-            res.status(401).send({ status: "error", message: 'Office is not found' });
-            return;
-        }
+        let pos = req.body.position;
+        let size = req.body.size;
 
-        if(editedOffice == officeNumber) { // Editing same office
-            offices[floor][officeNumber] = {
-                hidden: offices[floor][editedOffice].hidden,
-                info: [ officeName, officeMaintenance ],
+        let isHidden = req.body.hidden;
 
-                width: offices[floor][editedOffice].width,
-                height: offices[floor][editedOffice].height,
-                
-                top: offices[floor][editedOffice].top,
-                left: offices[floor][editedOffice].left,
+        if(officeName && officeNumber && officeMaintenance && pos && size && isHidden != undefined) {
+            if(!Object.keys(offices[floorNumber]).includes(editedOffice)){
+                res.status(401).send({ status: "error", message: 'Office is not found' });
+                return;
             }
 
-            officesList[floor][officeNumber] = {
-                hidden: offices[floor][editedOffice].hidden, 
+            let posTop = parseInt(pos[0], 10);
+            let posLeft = parseInt(pos[1], 10);
 
-                width: offices[floor][editedOffice].width,
-                height: offices[floor][editedOffice].height,
-                
-                top: offices[floor][editedOffice].top,
-                left: offices[floor][editedOffice].left,
+            if(isNaN(posTop) || isNaN(posLeft)) {
+                res.status(401).send({ status: "error", message: "Position is invalid" });
+                return;
             }
 
-            infoList[floor][officeNumber]= {
+            let sizeHeight = parseInt(size[0], 10);
+            let sizeWidth = parseInt(size[1], 10);
+
+            if(isNaN(sizeHeight) || isNaN(sizeWidth)) {
+                res.status(401).send({ status: "error", message: "Size is invalid" });
+                return;
+            }
+
+            if(typeof(isHidden) != "boolean") {
+                res.status(401).send({ status: "error", message: "Hidden is invalid" });
+                return;
+            }
+            
+            offices[floorNumber][officeNumber] = {
+                hidden: isHidden,
+                info: [officeName, officeMaintenance],
+                
+                width: sizeWidth + "px",
+                height: sizeHeight + "px",
+                
+                top: posTop + "px",
+                left: posLeft + "px"
+            }
+
+            if(!isHidden) {
+                officesList[floorNumber][officeNumber] = {
+                    hidden: isHidden,
+                    info: [officeName, officeMaintenance],
+                    
+                    width: sizeWidth + "px",
+                    height: sizeHeight + "px",
+                    
+                    top: posTop + "px",
+                    left: posLeft + "px"
+                }
+            } else
+                hiddenOffices[floorNumber][officeNumber] = true
+
+            infoList[floorNumber][officeNumber]= {
                 info: [officeName, officeMaintenance ],
             }
-        } else { // Change office number
-            offices[floor][officeNumber] = {
-                hidden: offices[floor][editedOffice].hidden,
-                info: [ officeName, officeMaintenance ],
 
-                width: offices[floor][editedOffice].width,
-                height: offices[floor][editedOffice].height,
-                
-                top: offices[floor][editedOffice].top,
-                left: offices[floor][editedOffice].left,
+            if(editedOffice != officeNumber) { // Change office number
+                delete offices[floorNumber][editedOffice];
+                delete officesList[floorNumber][editedOffice];
+                delete infoList[floorNumber][editedOffice];
             }
 
-            officesList[floor][officeNumber] = {
-                hidden: offices[floor][editedOffice].hidden, 
+            // Save to JSON
+            saveToJson();
 
-                width: offices[floor][editedOffice].width,
-                height: offices[floor][editedOffice].height,
-                
-                top: offices[floor][editedOffice].top,
-                left: offices[floor][editedOffice].left,
-            }
-
-            infoList[floor][officeNumber]= {
-                info: [officeName, officeMaintenance ],
-            }
-
-            delete offices[floor][editedOffice];
-            delete officesList[floor][editedOffice];
-            delete infoList[floor][editedOffice];
-        }
+            res.status(200).send({ status: "success", message: "Office has been edited" });
+        } else
+            res.status(401).send({ status: "error", message: "Invalid information" })
     } else
         res.status(401).send({ status: "error", message: "Unauthorized access" });
 });
@@ -221,7 +231,9 @@ mapRoute.post("/office/add", function(req, res) {
         let pos = req.body.position;
         let size = req.body.size;
 
-        if(officeName && officeNumber && maintenanceNumber && pos && size) {            
+        let isHidden = req.body.hidden;
+
+        if(officeName && officeNumber && maintenanceNumber && pos && size && isHidden != undefined) {            
             let posTop = parseInt(pos[0], 10);
             let posLeft = parseInt(pos[1], 10);
 
@@ -238,36 +250,49 @@ mapRoute.post("/office/add", function(req, res) {
                 return;
             }
 
-            offices[floorNumber-1][officeNumber] = {
-                info: [officeName, maintenanceNumber],
-                
-                width: sizeWidth + "px",
-                height: sizeHeight + "px",
-                
-                top: posTop + "px",
-                left: posLeft + "px"
+            if(typeof(isHidden) != "boolean") {
+                res.status(401).send({ status: "error", message: "Hidden is invalid" });
+                return;
+            }
+
+            if(offices[floorNumber-1][officeNumber] == null) {
+                offices[floorNumber-1][officeNumber] = {
+                    hidden: isHidden,
+                    info: [officeName, maintenanceNumber],
+                    
+                    width: sizeWidth + "px",
+                    height: sizeHeight + "px",
+                    
+                    top: posTop + "px",
+                    left: posLeft + "px"
+                }
+            } else {
+                res.status(401).send({ status: "error", message: "يوجد مكتب بهذا الرقم في هذا الطابق" });
+                return;
             }
 
             // Save to JSON
             saveToJson();
 
-            officesList[floorNumber-1][officeNumber] = {                
-                width: sizeWidth + "px",
-                height: sizeHeight + "px",
-                
-                top: posTop + "px",
-                left: posLeft + "px"
-            }
+            if(!isHidden) {
+                officesList[floorNumber-1][officeNumber] = {                
+                    width: sizeWidth + "px",
+                    height: sizeHeight + "px",
+                    
+                    top: posTop + "px",
+                    left: posLeft + "px"
+                }
+            } else
+                hiddenOffices[floorNumber-1][officeNumber] = true
 
             infoList[floorNumber-1][officeNumber] = {
                 info: [officeName, maintenanceNumber]
             }
+
+            res.status(200).send({ status: "success", message: "Office added" });
         } else {
             res.status(401).send({ status: "error", message: "Invalid information" });
         }
-
-
-        res.status(200).send({ status: "success", message: "Office added" });
     } else
         res.status(401).send({ status: "error", message: "Unauthorized access" });
 });

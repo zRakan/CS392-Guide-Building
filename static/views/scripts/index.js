@@ -137,6 +137,39 @@ function showQR(containerDiv, office) {
         showNotification("تم إنشاء المربّع بنجاح", "success")
 }
 
+// Show/Hide add office container
+let addMenu = editMenu = false;
+let addContainer, editContainer, officeViewer, editOfficeView, officeDiv, oldStyle, wasHidden, editedOffice, editedFloor, currentFloor = 0;
+
+function closeMenu(nochange) {
+    if(addMenu || editMenu) { // Hide add/edit menu
+
+        if(addMenu) {
+            document.body.removeChild(addContainer);
+            floors[currentFloor].removeChild(officeViewer);
+            addMenu = false;
+        }
+
+        if(editMenu) {        
+            document.body.removeChild(editContainer);
+            //floors[currentFloor].removeChild(officeViewer);
+
+            if(!nochange) {
+                officeDiv.innerHTML = editedOffice;
+                officeDiv.setAttribute("style", oldStyle);
+
+                // Return to floor
+                    floors[currentFloor].removeChild(officeDiv);
+                    switchFloor(editedFloor);
+                    floors[currentFloor].appendChild(officeDiv);
+            }
+
+
+            editMenu = false;
+        }
+    }
+}
+
 /**
     * @summary This function will create a div with information of the office
     * @param {HTMLDivElement} office The container of the div
@@ -144,6 +177,8 @@ function showQR(containerDiv, office) {
     * @param {String} maintenance Maintenance number 
 */
 function showInformation(office, teacher, maintenance, hidden, floor) {
+    closeMenu(); // Hide add/edit menu
+
     // Blur Background
     mapContainer.style.filter = 'blur(0.2rem)';
     mapContainer.style['pointer-events']  = 'none'; // Prevent clicking map container
@@ -176,6 +211,7 @@ function showInformation(office, teacher, maintenance, hidden, floor) {
             }
         });
 
+    floor = (parseInt(floor,10) + 1);
     if(_switchMode) { // If in administrator mode
         if(!hidden) {
             let visibilityText = document.createElement("div");
@@ -189,6 +225,292 @@ function showInformation(office, teacher, maintenance, hidden, floor) {
             editBtn.setAttribute('id', 'edit-btn');
             editBtn.setAttribute('type', 'button');
             editBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-pencil-fill" viewBox="0 0 16 16"> <path d="M12.854.146a.5.5 0 0 0-.707 0L10.5 1.793 14.207 5.5l1.647-1.646a.5.5 0 0 0 0-.708l-3-3zm.646 6.061L9.793 2.5 3.293 9H3.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.207l6.5-6.5zm-7.468 7.468A.5.5 0 0 1 6 13.5V13h-.5a.5.5 0 0 1-.5-.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.5-.5V10h-.5a.499.499 0 0 1-.175-.032l-.179.178a.5.5 0 0 0-.11.168l-2 5a.5.5 0 0 0 .65.65l5-2a.5.5 0 0 0 .168-.11l.178-.178z"/> </svg>';
+
+            editBtn.addEventListener("click", function(e) {
+
+                // Getting information about office
+                    let childOffices = floors[currentFloor].children;
+                    for(let child in childOffices) {
+                        let div = childOffices[child];
+                        if(typeof(div) == "object") {
+                            if(div.innerHTML == office && !div.getAttribute("id")) {
+                                officeDiv = div;
+                                break;
+                            }
+                        }
+                    }
+
+                    // For reverting changes
+                        oldStyle = officeDiv.getAttribute("style");
+                        wasHidden = officeDiv.getAttribute("data-hidden");
+                        editedOffice = office;
+                        editedFloor = parseInt(floor, 10) - 1;
+
+                    let teacherName = teacher || "";
+                    let maintenanceNumber = maintenance || "";
+
+
+                // Close information office
+                    mapContainer.style.filter = 'none';
+                    mapContainer.style['pointer-events']  = 'auto';
+                    containerDiv.classList.toggle('active');
+                    document.body.removeChild(containerDiv); // Removing this container
+
+                    // Event for add office
+                    editContainer = document.createElement("div");
+                    editContainer.setAttribute("class", "addoffice-container");
+
+                    editContainer.innerHTML = `<div class="addoffice-flex">
+
+                    <div class="addoffice-element">
+                        <label for="office-number">رقم المكتب</label>
+                        <input type="text" name="office-number" value=${office}>
+                    </div>
+
+                    <div class="addoffice-element">
+                        <label for="office-name">اسم المكتب & صاحب المكتب</label>
+                        <input type="text" name="office-name" value=${teacherName}>
+                    </div>
+
+                    <div class="addoffice-element">
+                        <label for="maintenance-number">رقم الصيانة</label>
+                        <input type="text" name="maintenance-number" value=${maintenanceNumber}>
+                    </div>
+
+                    <div class="addoffice-element">
+                        <label for="floor-number">رقم الطابق</label>
+                        <input type="text" name="floor-number" placeholder="رقم الطابق (1-4)" value=${floor}>
+                    </div>
+
+                    <div class="addoffice-element">
+                        <label for="office-position">مكان المكتب</label>
+
+                        <input type="text" name="office-position" placeholder="الطول" value=${(officeDiv.style.top).slice(0, -2)}>
+                        <input type="text" name="office-position" placeholder="العرض" value=${(officeDiv.style.left).slice(0, -2)}>
+                    </div>
+
+                    <div class="addoffice-element">
+                        <label for="office-size">حجم المكتب</label>
+                        
+                        <input type="text" name="office-size" placeholder="الطول" value=${(officeDiv.style.height).slice(0, -2)}>
+                        <input type="text" name="office-size" placeholder="العرض" value=${(officeDiv.style.width).slice(0, -2)}>
+                    </div>
+                </div>`
+
+                editMenu = true;
+
+                let centerEditOffice = document.createElement("div");
+                    centerEditOffice.setAttribute("class", "addoffice-center")
+
+                let editBtnContainer = document.createElement("div");
+                    editBtnContainer.setAttribute("class", "editoffice-btn-container");
+
+                let editOfficeSubmit = document.createElement("button");
+                    editOfficeSubmit.innerHTML = "تأكيد";
+                    editOfficeSubmit.setAttribute("id", "addoffice-submit");
+
+                let editOfficeClose = document.createElement("button");
+                    editOfficeClose.innerHTML = "إلغاء";
+                    editOfficeClose.setAttribute("id", "addoffice-submit");
+
+                let hideswitchContainer = document.createElement("div");
+                    hideswitchContainer.setAttribute("class", "addoffice-hideSwitcher");
+
+                let hideSwitcher = document.createElement("input");
+                    hideSwitcher.setAttribute("type", "checkbox");
+                    hideSwitcher.checked = hidden;
+
+
+
+                    hideSwitcher.addEventListener("input", function(e) {
+                        if(!officeDiv.getAttribute("data-hidden"))
+                            officeDiv.setAttribute("data-hidden", "true");
+                        else
+                            officeDiv.removeAttribute("data-hidden");
+                    })
+
+                let hideLabel = document.createElement("label")
+                    hideLabel.innerHTML = "غرفة مخفية";
+
+
+                    hideswitchContainer.appendChild(hideSwitcher);
+                    hideswitchContainer.appendChild(hideLabel);
+
+                    editBtnContainer.appendChild(editOfficeSubmit);
+                    editBtnContainer.appendChild(editOfficeClose);
+
+                    centerEditOffice.appendChild(editBtnContainer);
+                    centerEditOffice.appendChild(hideswitchContainer);
+
+                    editContainer.appendChild(centerEditOffice);
+
+
+                // Event Listener(s)
+                    // Cancel changes
+                    editOfficeClose.addEventListener("click", closeMenu);
+                
+                    // Submit
+                    editOfficeSubmit.addEventListener("click", async function(e) {
+                        let officeName = document.querySelector('.addoffice-element > input[name="office-name"]').value;
+                        let officeNumber = document.querySelector('.addoffice-element > input[name="office-number"]').value;
+                        let maintenanceNumber = document.querySelector('.addoffice-element > input[name="maintenance-number"]').value;
+                        let floorNumber = document.querySelector('.addoffice-element > input[name="floor-number"]').value;
+                        let position = document.querySelectorAll('.addoffice-element input[name="office-position"]');
+                            const positionTop = position[0].value;
+                            const positionLeft = position[1].value;
+    
+                        let size = document.querySelectorAll('.addoffice-element input[name="office-size"]');
+                            const sizeWidth = size[0].value;
+                            const sizeHeight = size[1].value;
+    
+                        if(!officeName) {
+                            showNotification("يجب عليك كتابة اسم المكتب", "failed");
+                            return;
+                        }
+    
+                        if(!officeNumber) {
+                            showNotification("يجب عليك كتابة رقم المكتب", "failed");
+                            return;
+                        }
+    
+                        if(!maintenanceNumber) {
+                            showNotification("يجب عليك كتابة رقم الصيانة", "failed");
+                            return;
+                        }
+    
+                        if(!floorNumber) {
+                            showNotification("يجب عليك كتابة رقم الطابق", "failed");
+                            return;
+                        } else if(floorNumber < '1' || floorNumber > '4') {
+                            showNotification("الطوابق المتاحة من 1 إلى 4", "failed");
+                            return;
+                        }
+    
+                        if(!positionTop || !positionLeft) {
+                            showNotification("يجب عليك كتابة مكان المكتب", "failed");
+                            return;
+                        }
+                        
+                        if(!sizeWidth || !sizeHeight) {
+                            showNotification("يجب عليك كتابة حجم المكتب", "failed");
+                            return;
+                        }
+    
+                        let isHidden = hideSwitcher.checked
+
+                        let resp = await fetch("/map/office/edit", {
+                            method: "POST",
+
+                            headers: {
+                                Accept: "application/json",
+                                "Content-Type": "application/json",
+                            },
+        
+                            body: JSON.stringify({
+                                floorNumber: floor + "",
+
+                                officeNumber,
+                                editedOffice: office,
+
+                                officeName,
+                                officeMaintenance: maintenanceNumber,
+
+                                position: [positionTop, positionLeft],
+                                size: [sizeWidth, sizeHeight],
+                                hidden: isHidden,
+                            }),
+                        });
+                        
+                        if(resp.status == 200) {
+                            showNotification("تم تحديث المكتب بنجاح", "success");
+
+                            closeMenu(true); // Closing menu without reverting changes
+                        } else
+                            showNotification("حدث خطأ", "failed");
+                    });
+
+                    let floorNumber = editContainer.querySelector('.addoffice-element > input[name="floor-number"]');
+                
+                    floorNumber.addEventListener("input", function(e) {
+                        if(e.data) {
+                            if(e.data < '1' || e.data > '4')
+                                showNotification("الطوابق المتاحة من 1 إلى 4", "failed");
+                        }
+                    });
+                    floorNumber.addEventListener("keypress", function(e) {
+                        let floor = e.key;
+                        if(floor < 1 || floor > 4 || floorNumber.value) {
+                            e.preventDefault();
+                            showNotification("الطوابق المتاحة من 1 إلى 4", "failed");
+                            return;
+                        }
+    
+                        floors[currentFloor].removeChild(officeDiv);
+                        switchFloor(parseInt(floor, 10) - 1);
+                        floors[currentFloor].appendChild(officeDiv);
+                    });
+    
+                    let officeNumber = editContainer.querySelector('.addoffice-element > input[name="office-number"]')
+                    let position = editContainer.querySelectorAll('.addoffice-element input[name="office-position"]');
+                    let size = editContainer.querySelectorAll('.addoffice-element input[name="office-size"]');
+    
+                    position.forEach(function(pos) {
+                        pos.addEventListener("keypress", function(e) {
+                            if(e.key < '0' || e.key > '9'){
+                                e.preventDefault();
+                                showNotification("يجب عليك كتابة ارقام فقط", "failed");
+                            }
+                        });
+    
+                        pos.addEventListener("input", function(e) {
+                            if(e.data) {
+                                if(e.key < '0' || e.key > '9')
+                                    showNotification("يجب عليك كتابة ارقام فقط", "failed");
+                            }
+                        });
+                    });
+                    size.forEach(function(siz) {
+                        siz.addEventListener("keypress", function(e) {
+                            if(e.key < '0' || e.key > '9'){
+                                e.preventDefault();
+                                showNotification("يجب عليك كتابة ارقام فقط", "failed");
+                            }
+                        });
+    
+                        siz.addEventListener("input", function(e) {
+                            if(e.data) {
+                                if(e.key < '0' || e.key > '9')
+                                    showNotification("يجب عليك كتابة ارقام فقط", "failed");
+                            }
+                        });
+                    });
+    
+                    // Office generator
+                    // position[0] => height
+                    // position[1] => width
+                    position[0].addEventListener("input", function(e) {
+                        officeDiv.style.top = (position[0].value ? position[0].value : "50") + "px";
+                    });
+    
+                    position[1].addEventListener("input", function(e) {
+                        officeDiv.style.left = (position[1].value ? position[1].value : "50") + "px";
+                    });
+    
+                    size[0].addEventListener("input", function(e) {
+                        officeDiv.style.height = (size[0].value ? size[0].value : "50") + "px";
+                    });
+    
+                    size[1].addEventListener("input", function(e) {
+                        officeDiv.style.width = (size[1].value ? size[1].value : "50") + "px";
+                    });
+    
+    
+                    officeNumber.addEventListener("input", function(e) {
+                        officeDiv.innerHTML = officeNumber.value ? officeNumber.value : "";
+                    });
+
+                    document.body.appendChild(editContainer);
+            });
 
         let removeBtn = document.createElement('button')
             removeBtn.setAttribute('id', 'remove-btn');
@@ -218,7 +540,7 @@ function showInformation(office, teacher, maintenance, hidden, floor) {
         
                             body: JSON.stringify({
                                 officeNumber: office,
-                                floorNumber: (parseInt(floor,10) + 1) + ""
+                                floorNumber: floor + ""
                             }),
                         });
                         
@@ -235,10 +557,12 @@ function showInformation(office, teacher, maintenance, hidden, floor) {
                                 for(let child in childOffices) {
                                     let div = childOffices[child];
                                     if(typeof(div) == "object") {
-                                        if(div.innerHTML == office)
+                                        if(div.innerHTML == office && !div.getAttribute("id")) {
                                             floors[currentFloor].removeChild(div);
+                                        }
                                     }
                                 }
+
                                 document.body.removeChild(containerDiv); // Removing this container
                             }, 1000);
                         }
@@ -365,7 +689,6 @@ function showNotification(message, status) {
     * @param {String || Integer} selectedFloor the target floor
     * @param {boolean} isDrop Is the switch come from dropdown menu or not 
 */
-let currentFloor = 0;
 function switchFloor(selectedFloor, isDrop) {
     if(isDrop) {
         searchInput.value = ""; // // Search input remove if switched from drop down
@@ -419,11 +742,6 @@ async function addOffices(onlyHidden) {
                     
                     div.style.width = officeList[office].width;
                     div.style.height = officeList[office].height;
-                    
-                    if(officeList[office].hidden) {
-                        div.style["background-color"] = "#00C8F8";
-                        div.style["border-color"] = "#0092B8";
-                    }
 
 
                     if(!leftMax){
@@ -483,6 +801,12 @@ async function addOffices(onlyHidden) {
         }
 }
 
+
+
+
+
+
+// Load event
 window.addEventListener("load", async function(event) {
     // Elements
         // Navbar
@@ -513,19 +837,19 @@ window.addEventListener("load", async function(event) {
             addOfficeBtn.setAttribute("title", "إضافة مكتب جديد");
             
             // Event for add office
-            const addContainer = document.createElement("div");
+            addContainer = document.createElement("div");
                     addContainer.setAttribute("class", "addoffice-container");
 
                     addContainer.innerHTML = `<div class="addoffice-flex">
 
                     <div class="addoffice-element">
-                        <label for="office-name">اسم المكتب & صاحب المكتب</label>
-                        <input type="text" name="office-name">
-                    </div>
-    
-                    <div class="addoffice-element">
                         <label for="office-number">رقم المكتب</label>
                         <input type="text" name="office-number">
+                    </div>
+
+                    <div class="addoffice-element">
+                        <label for="office-name">اسم المكتب & صاحب المكتب</label>
+                        <input type="text" name="office-name">
                     </div>
     
                     <div class="addoffice-element">
@@ -554,14 +878,38 @@ window.addEventListener("load", async function(event) {
                 </div>`
 
 
+            let centerAddOffice = document.createElement("div");
+                centerAddOffice.setAttribute("class", "addoffice-center")
 
             let addOfficeSubmit = document.createElement("button");
                 addOfficeSubmit.innerHTML = "تأكيد";
                 addOfficeSubmit.setAttribute("id", "addoffice-submit");
 
+            let hideswitchContainer = document.createElement("div");
+                hideswitchContainer.setAttribute("class", "addoffice-hideSwitcher");
+
+            let hideSwitcher = document.createElement("input");
+                hideSwitcher.setAttribute("type", "checkbox");
+
+            let hideLabel = document.createElement("label")
+                hideLabel.innerHTML = "غرفة مخفية";
+
+
+                hideswitchContainer.appendChild(hideSwitcher);
+                hideswitchContainer.appendChild(hideLabel);
+
+
+
+
+
+
+
+
                 // Event listener
-                let officeViewer = document.createElement("div");
+                officeViewer = document.createElement("div");
                 officeViewer.setAttribute("class", "office");
+                officeViewer.setAttribute("id", "office-viewer")
+
                 officeViewer.style.position = "absolute";
 
                 officeViewer.style.left = "50px";
@@ -618,7 +966,7 @@ window.addEventListener("load", async function(event) {
                         return;
                     }
 
-
+                    let isHidden = hideSwitcher.checked
                     let resp = await fetch("/map/office/add", {
                         method: "POST",
 
@@ -634,12 +982,21 @@ window.addEventListener("load", async function(event) {
                             floorNumber,
                             position: [positionTop, positionLeft],
                             size: [sizeWidth, sizeHeight],
+                            hidden: isHidden
                         }),
                     });
                     resp = await resp.json();
 
                     if(resp.status == "success") {
                         let tempOffice = officeViewer.cloneNode(true);
+                        tempOffice.style.removeProperty("background-color");
+
+                        closeMenu();
+
+                        if(isHidden)
+                            tempOffice.setAttribute("data-hidden", "true")
+                        
+                        tempOffice.removeAttribute("id");
                         
                         floorNumber = (parseInt(floorNumber, 10) - 1) + "";
                         tempOffice.addEventListener("click", async function(e) {
@@ -648,10 +1005,9 @@ window.addEventListener("load", async function(event) {
         
                             if(officeResp.error) return;
         
-                            showInformation(officeNumber, officeResp.teacher, officeResp.maintenance, false, floorNumber);
+                            showInformation(officeNumber, officeResp.teacher, officeResp.maintenance, tempOffice.getAttribute("data-hidden"), floorNumber);
                         });
 
-                        tempOffice.style["background-color"] = "#ebebeb";
                         floors[currentFloor].appendChild(tempOffice);
                         showNotification("تم إضافة المكتب بنجاح", "success");
                     } else {
@@ -659,9 +1015,14 @@ window.addEventListener("load", async function(event) {
                     }
                 });
 
-                addContainer.appendChild(addOfficeSubmit);
-                let floorNumber = addContainer.querySelector('.addoffice-element > input[name="floor-number"]');
+                // Adding elements to centered add office container
+                centerAddOffice.appendChild(addOfficeSubmit);
+                centerAddOffice.appendChild(hideswitchContainer);
 
+                // append "addOffice centered" container to "addOffice" container
+                addContainer.appendChild(centerAddOffice);
+
+                let floorNumber = addContainer.querySelector('.addoffice-element > input[name="floor-number"]');
                 
                 floorNumber.addEventListener("input", function(e) {
                     if(e.data) {
@@ -742,17 +1103,17 @@ window.addEventListener("load", async function(event) {
                 });
 
             
-            let addMenu = false;
             addOfficeBtn.addEventListener("click", function(e) {
+                if(editMenu)
+                    closeMenu();
+
                 addMenu = !addMenu;
                 
                 // Addoffice Container
                 if(addMenu)
                     (addContainer.querySelector('.addoffice-element > input[name="floor-number"]')).setAttribute("value", currentFloor+1);
-
+            
                 addMenu ? document.body.appendChild(addContainer) : document.body.removeChild(addContainer);
-
-
                 addMenu ? floors[currentFloor].appendChild(officeViewer) : floors[currentFloor].removeChild(officeViewer);
             });
 
@@ -784,6 +1145,8 @@ window.addEventListener("load", async function(event) {
         let navbarOpened = false;
         navbarBtn.addEventListener("click", function() {
             if(navbarOpened || ["", "auto"].includes(mapContainer.style["pointer-events"])) {
+                closeMenu(); // Hide add/edit menu
+
                 navbarMenu.style.width = !navbarOpened ? "200px" : "0";
 
                 mapContainer.style.filter = !navbarOpened ? "blur(0.2rem)" : "blur(0)";
@@ -883,7 +1246,7 @@ window.addEventListener("load", async function(event) {
             let switchContainer = document.createElement("div");
                 switchContainer.setAttribute("id", "container-switcher");
 
-            let viewSwitcher = document.createElement("input")
+            let viewSwitcher = document.createElement("input");
                 viewSwitcher.setAttribute("type", "checkbox");
                 viewSwitcher.setAttribute("id", "viewmode-switcher");
                 viewSwitcher.checked = true; // Switcher is enabled

@@ -1,6 +1,6 @@
 seamless.polyfill();
 
-let floors, dropText, mapText, searchInput, mapElement, mapContainer, searchContainer, addOfficeBtn;
+let offices, floors, dropText, mapText, searchInput, mapElement, mapContainer, searchContainer, addOfficeBtn;
 
 // Shared office
     let urlParams = new URLSearchParams(window.location.search);
@@ -67,11 +67,11 @@ let floorTexts = ["الطابق الأول", "الطابق الثاني", "ال�
     * @return {Integer} - Floor number
 */
 function getFloorByText(floor) {
-    if(floor == "الطابق الرابع")
+    if(floor == "الطابق الرابع" || floor == "fourth_floor")
         return 3;
-    else if(floor == "الطابق الثالث")
+    else if(floor == "الطابق الثالث" || floor == "third_floor")
         return 2;
-    else if(floor == "الطابق الثاني")
+    else if(floor == "الطابق الثاني" || floor == "second_floor")
         return 1;
     else return 0;
 }
@@ -139,7 +139,7 @@ function showQR(containerDiv, office) {
 
 // Show/Hide add office container
 let addMenu = editMenu = false;
-let addContainer, editContainer, officeViewer, editOfficeView, officeDiv, oldStyle, wasHidden, editedOffice, editedFloor, currentFloor = 0;
+let addContainer, editContainer, officeViewer, officeDiv, oldStyle, wasHidden, editedOffice, editedFloor, currentFloor = 0;
 
 function closeMenu(nochange) {
     if(addMenu || editMenu) { // Hide add/edit menu
@@ -157,6 +157,11 @@ function closeMenu(nochange) {
             if(!nochange) {
                 officeDiv.innerHTML = editedOffice;
                 officeDiv.setAttribute("style", oldStyle);
+
+                if(wasHidden)
+                    officeDiv.setAttribute("data-hidden", "true");
+                else
+                    officeDiv.removeAttribute("data-hidden");
 
                 // Return to floor
                     floors[currentFloor].removeChild(officeDiv);
@@ -279,7 +284,7 @@ function showInformation(office, teacher, maintenance, hidden, floor) {
 
                     <div class="addoffice-element">
                         <label for="floor-number">رقم الطابق</label>
-                        <input type="text" name="floor-number" placeholder="رقم الطابق (1-4)" value=${floor}>
+                        <input type="text" name="floor-number" placeholder="رقم الطابق (1-4)" value=${currentFloor+1}>
                     </div>
 
                     <div class="addoffice-element">
@@ -347,7 +352,9 @@ function showInformation(office, teacher, maintenance, hidden, floor) {
 
                 // Event Listener(s)
                     // Cancel changes
-                    editOfficeClose.addEventListener("click", closeMenu);
+                    editOfficeClose.addEventListener("click", function(e) {
+                        closeMenu();
+                    });
                 
                     // Submit
                     editOfficeSubmit.addEventListener("click", async function(e) {
@@ -407,7 +414,8 @@ function showInformation(office, teacher, maintenance, hidden, floor) {
                             },
         
                             body: JSON.stringify({
-                                floorNumber: floor + "",
+                                newFloor: floorNumber,
+                                oldFloor: floor,
 
                                 officeNumber,
                                 editedOffice: office,
@@ -423,6 +431,15 @@ function showInformation(office, teacher, maintenance, hidden, floor) {
                         
                         if(resp.status == 200) {
                             showNotification("تم تحديث المكتب بنجاح", "success");
+
+                            let newFloor = parseInt(floorNumber, 10) - 1;
+
+                            offices[newFloor][officeNumber] = offices[floor-1][office];
+                            offices[newFloor][officeNumber].hidden = isHidden;
+
+                            // Remove old one
+                            if(newFloor != floor-1)
+                                delete offices[floor-1][editedOffice];
 
                             closeMenu(true); // Closing menu without reverting changes
                         } else
@@ -713,7 +730,6 @@ function switchFloor(selectedFloor, isDrop) {
         mapText.innerHTML = floorText;
 }
 
-let offices;
 async function addOffices(onlyHidden) {
         offices = await fetch("/map/offices");
         offices = await(offices.json());
@@ -763,12 +779,12 @@ async function addOffices(onlyHidden) {
                 div.innerHTML = office;
 
                 div.addEventListener("click", async function() {
-                    let officeResp = await fetch("/map/office/" + floor + "/"+ office);
+                    let officeResp = await fetch("/map/office/" + getFloorByText(div.parentElement.id) + "/"+ div.innerHTML);
                     officeResp = await officeResp.json();
 
                     if(officeResp.error) return;
 
-                    showInformation(office, officeResp.teacher, officeResp.maintenance, officeList[office].hidden, floor);
+                    showInformation(div.innerHTML, officeResp.teacher, officeResp.maintenance, offices[getFloorByText(div.parentElement.id)][div.innerHTML].hidden, getFloorByText(div.parentElement.id));
                 });
                 
                 floors[floor].appendChild(div);

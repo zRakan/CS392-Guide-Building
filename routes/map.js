@@ -29,7 +29,8 @@ for(let floor in offices){
         if(offices[floor][office].hidden)
             hiddenOffices[floor][office] = true;
         else
-            officesList[floor][office] = (({info, ...a}) => a)(offices[floor][office])
+            //officesList[floor][office] = (({info, ...a}) => a)(offices[floor][office])
+            officesList[floor][office] = offices[floor][office]
 
         infoList[floor][office] = (({width, height, top, left, ...b}) => b)(offices[floor][office])
 
@@ -125,13 +126,18 @@ mapRoute.post("/office/remove", function(req, res) {
 // Edit office
 mapRoute.post("/office/edit", function(req, res) {
     if(req.session.user) {
-        let floorNumber = req.body.floorNumber;
-        if(floorNumber < '1' || floorNumber > '4') {
+
+
+        let newFloor = req.body.newFloor;
+        let oldFloor = req.body.oldFloor;
+
+        if(newFloor < '1' || newFloor > '4' || oldFloor < 1 || oldFloor > 4) {
             res.status(401).send({ status: "error", message: "Floor is not found" });
             return;
         }
-        floorNumber = parseInt(floorNumber, 10) - 1; // Parsing to integer
-        
+        newFloor = parseInt(newFloor, 10) - 1; // Parsing to integer
+        oldFloor = oldFloor - 1;
+
         let editedOffice = req.body.editedOffice;
         let officeNumber = req.body.officeNumber;
         let officeName = req.body.officeName;
@@ -143,7 +149,7 @@ mapRoute.post("/office/edit", function(req, res) {
         let isHidden = req.body.hidden;
 
         if(officeName && officeNumber && officeMaintenance && pos && size && isHidden != undefined) {
-            if(!Object.keys(offices[floorNumber]).includes(editedOffice)){
+            if(!Object.keys(offices[oldFloor]).includes(editedOffice)){
                 res.status(401).send({ status: "error", message: 'Office is not found' });
                 return;
             }
@@ -169,7 +175,7 @@ mapRoute.post("/office/edit", function(req, res) {
                 return;
             }
             
-            offices[floorNumber][officeNumber] = {
+            offices[newFloor][officeNumber] = {
                 hidden: isHidden,
                 info: [officeName, officeMaintenance],
                 
@@ -181,8 +187,8 @@ mapRoute.post("/office/edit", function(req, res) {
             }
 
             if(!isHidden) {
-                officesList[floorNumber][officeNumber] = {
-                    hidden: isHidden,
+                officesList[newFloor][officeNumber] = {
+                    /*hidden: isHidden,*/
                     info: [officeName, officeMaintenance],
                     
                     width: sizeWidth + "px",
@@ -191,17 +197,21 @@ mapRoute.post("/office/edit", function(req, res) {
                     top: posTop + "px",
                     left: posLeft + "px"
                 }
-            } else
-                hiddenOffices[floorNumber][officeNumber] = true
 
-            infoList[floorNumber][officeNumber]= {
+                delete hiddenOffices[newFloor][officeNumber];
+            } else
+                hiddenOffices[newFloor][officeNumber] = true
+
+            infoList[newFloor][officeNumber]= {
                 info: [officeName, officeMaintenance ],
             }
 
-            if(editedOffice != officeNumber) { // Change office number
-                delete offices[floorNumber][editedOffice];
-                delete officesList[floorNumber][editedOffice];
-                delete infoList[floorNumber][editedOffice];
+            if(editedOffice != officeNumber || newFloor != oldFloor) { // Change office number
+                delete offices[oldFloor][editedOffice];
+                delete officesList[oldFloor][editedOffice];
+                delete infoList[oldFloor][editedOffice];
+            } else if(isHidden) {
+                delete officesList[oldFloor][editedOffice];
             }
 
             // Save to JSON
@@ -275,7 +285,9 @@ mapRoute.post("/office/add", function(req, res) {
             saveToJson();
 
             if(!isHidden) {
-                officesList[floorNumber-1][officeNumber] = {                
+                officesList[floorNumber-1][officeNumber] = {    
+                    info: [officeName, maintenanceNumber],
+
                     width: sizeWidth + "px",
                     height: sizeHeight + "px",
                     

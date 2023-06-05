@@ -1,6 +1,6 @@
 seamless.polyfill();
 
-let offices, floors, dropText, mapText, searchInput, mapElement, mapContainer, searchContainer, addOfficeBtn;
+let offices, floors, dropText, mapText, searchInput, mapElement, mapContainer, searchContainer, addOfficeBtn, eventsWait = false;
 
 // Shared office
     let urlParams = new URLSearchParams(window.location.search);
@@ -124,7 +124,7 @@ function showQR(containerDiv, office) {
 
             setTimeout(function() {
                 document.body.removeChild(qrContainer); // Removing this container
-            }, 1000);
+            }, 500);
         }
     });
 
@@ -212,7 +212,7 @@ function showInformation(office, teacher, maintenance, hidden, floor) {
 
                 setTimeout(function() {
                     document.body.removeChild(containerDiv); // Removing this container
-                }, 1000);
+                }, 500);
             }
         });
 
@@ -358,6 +358,11 @@ function showInformation(office, teacher, maintenance, hidden, floor) {
                 
                     // Submit
                     editOfficeSubmit.addEventListener("click", async function(e) {
+                        if(eventsWait) {
+                            showInformation("يجب عليك الإنتظار قليلًا", "warning");
+                            return;
+                        }
+
                         let officeName = document.querySelector('.addoffice-element > input[name="office-name"]').value;
                         let officeNumber = document.querySelector('.addoffice-element > input[name="office-number"]').value;
                         let maintenanceNumber = document.querySelector('.addoffice-element > input[name="maintenance-number"]').value;
@@ -405,6 +410,7 @@ function showInformation(office, teacher, maintenance, hidden, floor) {
     
                         let isHidden = hideSwitcher.checked
 
+                        eventsWait = true;
                         let resp = await fetch("/map/office/edit", {
                             method: "POST",
 
@@ -428,6 +434,7 @@ function showInformation(office, teacher, maintenance, hidden, floor) {
                                 hidden: isHidden,
                             }),
                         });
+                        eventsWait = false;
                         
                         if(resp.status == 200) {
                             showNotification("تم تحديث المكتب بنجاح", "success");
@@ -438,7 +445,7 @@ function showInformation(office, teacher, maintenance, hidden, floor) {
                             offices[newFloor][officeNumber].hidden = isHidden;
 
                             // Remove old one
-                            if(newFloor != floor-1)
+                            if(newFloor != floor-1 || editedOffice != officeNumber)
                                 delete offices[floor-1][editedOffice];
 
                             closeMenu(true); // Closing menu without reverting changes
@@ -537,6 +544,11 @@ function showInformation(office, teacher, maintenance, hidden, floor) {
             let confirm = false;
             let deleted = false;
             removeBtn.addEventListener("click", async function(e) {
+                if(eventsWait) {
+                    showInformation("يجب عليك الإنتظار قليلًا", "warning");
+                    return;
+                }
+
                 if(!confirm) {
                     confirm = true;
                     showNotification("اضغط على زر الحذف مرة أخرى للتأكيد", "warning");
@@ -547,6 +559,8 @@ function showInformation(office, teacher, maintenance, hidden, floor) {
                 } else {
                     if(!deleted) {
                         deleted = true;
+
+                        eventsWait = true;
                         let data = await fetch("/map/office/remove", {
                             method: "POST",
 
@@ -560,8 +574,11 @@ function showInformation(office, teacher, maintenance, hidden, floor) {
                                 floorNumber: floor + ""
                             }),
                         });
+                        eventsWait = false;
                         
                         if(data.status == 200) {
+                            delete offices[floor-1][office];
+
                             showNotification("تم حذف المكتب بنجاح", "success");
                             mapContainer.style.filter = 'none';
                             mapContainer.style['pointer-events']  = 'auto';  
@@ -581,7 +598,7 @@ function showInformation(office, teacher, maintenance, hidden, floor) {
                                 }
 
                                 document.body.removeChild(containerDiv); // Removing this container
-                            }, 1000);
+                            }, 500);
                         }
                     }
                     
@@ -779,10 +796,21 @@ async function addOffices(onlyHidden) {
                 div.innerHTML = office;
 
                 div.addEventListener("click", async function() {
+                    if(eventsWait) {
+                        showNotification("يجب عليك الإنتظار قليلًا", "warning");
+                        return;
+                    }
+                    
+                    eventsWait = true;
                     let officeResp = await fetch("/map/office/" + getFloorByText(div.parentElement.id) + "/"+ div.innerHTML);
                     officeResp = await officeResp.json();
+                    eventsWait = false;
 
-                    if(officeResp.error) return;
+                    if(officeResp.error) {
+                        showInformation("حدث خطأ", "failed");
+                        return;
+                    }
+
 
                     showInformation(div.innerHTML, officeResp.teacher, officeResp.maintenance, offices[getFloorByText(div.parentElement.id)][div.innerHTML].hidden, getFloorByText(div.parentElement.id));
                 });
@@ -937,6 +965,11 @@ window.addEventListener("load", async function(event) {
 
 
                 addOfficeSubmit.addEventListener("click", async function(e) {
+                    if(eventsWait) {
+                        showInformation("يجب عليك الإنتظار قليلًا", "warning");
+                        return;
+                    }
+
                     let officeName = document.querySelector('.addoffice-element > input[name="office-name"]').value;
                     let officeNumber = document.querySelector('.addoffice-element > input[name="office-number"]').value;
                     let maintenanceNumber = document.querySelector('.addoffice-element > input[name="maintenance-number"]').value;
@@ -983,6 +1016,8 @@ window.addEventListener("load", async function(event) {
                     }
 
                     let isHidden = hideSwitcher.checked
+
+                    eventsWait = true
                     let resp = await fetch("/map/office/add", {
                         method: "POST",
 
@@ -1002,6 +1037,8 @@ window.addEventListener("load", async function(event) {
                         }),
                     });
                     resp = await resp.json();
+                    eventsWait = false;
+
 
                     if(resp.status == "success") {
                         let tempOffice = officeViewer.cloneNode(true);
@@ -1014,14 +1051,34 @@ window.addEventListener("load", async function(event) {
                         
                         tempOffice.removeAttribute("id");
                         
+                        // Add Office to offices object
+                        offices[parseInt(floorNumber, 10) - 1][officeNumber] = {
+                            hidden: isHidden,
+
+                            info: [officeName, maintenanceNumber],
+
+                            width: sizeWidth,
+                            height: sizeHeight,
+
+                            top: positionTop,
+                            left: positionLeft
+                        }
+
                         floorNumber = (parseInt(floorNumber, 10) - 1) + "";
                         tempOffice.addEventListener("click", async function(e) {
-                            let officeResp = await fetch("/map/office/" + floorNumber + "/"+ officeNumber);
+                            if(eventsWait) {
+                                showInformation("يجب عليك الإنتظار قليلًا", "warning");
+                                return;
+                            }
+
+                            eventsWait = true;
+                            let officeResp = await fetch("/map/office/" + getFloorByText(tempOffice.parentElement.id) + "/"+ tempOffice.innerHTML);
                             officeResp = await officeResp.json();
+                            eventsWait = false;
         
                             if(officeResp.error) return;
         
-                            showInformation(officeNumber, officeResp.teacher, officeResp.maintenance, tempOffice.getAttribute("data-hidden"), floorNumber);
+                            showInformation(tempOffice.innerHTML, officeResp.teacher, officeResp.maintenance, tempOffice.getAttribute("data-hidden"), getFloorByText(tempOffice.parentElement.id));
                         });
 
                         floors[currentFloor].appendChild(tempOffice);
@@ -1289,15 +1346,22 @@ window.addEventListener("load", async function(event) {
                     loginContainer.style.opacity = buttonsNav[2].classList.contains("active") ? 1 : 0;
                     loginContainer.style["pointer-events"] = buttonsNav[2].classList.contains("active") ? "auto" : "none";
                 } else { // Logout
+                    if(eventsWait) {
+                        showInformation("يجب عليك الإنتظار قليلًا", "warning");
+                        return;
+                    }
 
+                    eventsWait = true;
                     let data = await fetch("/logout", {
                         method: "POST",
 
                         headers: {
                             Accept: "application/json",
                         },
-                    })
+                    });
                     data = await data.json();
+                    eventsWait = false;
+
 
                     if(data.status == "success") { // Logged-out successfully
                         loggedIn = false;
@@ -1316,7 +1380,7 @@ window.addEventListener("load", async function(event) {
             });
 
         submitBtn.addEventListener("click", async function(e) {
-            if(loggingIn)
+            if(loggingIn || eventsWait)
                 showNotification("يجب عليك الإنتظار قليلًا", "warning");
             else if(!userField.value)
                 showNotification("يجب عليك كتابة اسم المستخدم", "warning");
@@ -1327,7 +1391,8 @@ window.addEventListener("load", async function(event) {
                 setTimeout(function() {
                     loggingIn = false;
                 }, 5000)
-
+                    
+                eventsWait = true;
                 let data = await fetch("/login", {
                     method: "POST",
 
@@ -1342,7 +1407,8 @@ window.addEventListener("load", async function(event) {
                     }),
 
                     credentials: "include"
-                })
+                });
+                eventsWait = false;
 
                 if([200, 401].includes(data.status)) {
                     data = await data.json();

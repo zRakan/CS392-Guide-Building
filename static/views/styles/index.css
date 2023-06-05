@@ -68,9 +68,16 @@ body {
 
 /* Header elements */
     #left-header {
+        position: absolute;
+
         float: left;
         padding-left: 20px;
+        bottom: 5%;
+
         left: 0%;
+
+        height: fit-content;
+
     }
 
     #left-header > img {

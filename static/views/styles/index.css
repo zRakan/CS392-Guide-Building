@@ -67,11 +67,25 @@ body {
 
 
 /* Header elements */
-    .header-items {
+    #left-header {
+        float: left;
+        padding-left: 20px;
+        left: 0%;
+    }
+
+    #left-header > img {
+        color: white;
+
+        background-blend-mode: multiply;
+        
+        width: 32px;
+        height: 48px;
+    }
+
+    #right-header {
         float: right;
         padding-right: 10px;
         right: 0%;
-
     }
 
 /* Footer elements */

@@ -188,6 +188,8 @@ function showInformation(office, teacher, maintenance, hidden, floor) {
     mapContainer.style.filter = 'blur(0.2rem)';
     mapContainer.style['pointer-events']  = 'none'; // Prevent clicking map container
 
+    eventsWait = false;
+
     // Create container for information
     let containerDiv = document.createElement('div');
         containerDiv.setAttribute('class', 'office-info')
@@ -359,7 +361,7 @@ function showInformation(office, teacher, maintenance, hidden, floor) {
                     // Submit
                     editOfficeSubmit.addEventListener("click", async function(e) {
                         if(eventsWait) {
-                            showInformation("يجب عليك الإنتظار قليلًا", "warning");
+                            showNotification("يجب عليك الإنتظار قليلًا", "warning");
                             return;
                         }
 
@@ -545,7 +547,7 @@ function showInformation(office, teacher, maintenance, hidden, floor) {
             let deleted = false;
             removeBtn.addEventListener("click", async function(e) {
                 if(eventsWait) {
-                    showInformation("يجب عليك الإنتظار قليلًا", "warning");
+                    showNotification("يجب عليك الإنتظار قليلًا", "warning");
                     return;
                 }
 
@@ -574,7 +576,6 @@ function showInformation(office, teacher, maintenance, hidden, floor) {
                                 floorNumber: floor + ""
                             }),
                         });
-                        eventsWait = false;
                         
                         if(data.status == 200) {
                             delete offices[floor-1][office];
@@ -600,6 +601,8 @@ function showInformation(office, teacher, maintenance, hidden, floor) {
                                 document.body.removeChild(containerDiv); // Removing this container
                             }, 500);
                         }
+
+                        eventsWait = false;
                     }
                     
                     
@@ -804,10 +807,10 @@ async function addOffices(onlyHidden) {
                     eventsWait = true;
                     let officeResp = await fetch("/map/office/" + getFloorByText(div.parentElement.id) + "/"+ div.innerHTML);
                     officeResp = await officeResp.json();
-                    eventsWait = false;
 
                     if(officeResp.error) {
-                        showInformation("حدث خطأ", "failed");
+                        showNotification("حدث خطأ", "failed");
+                        eventsWait = false;
                         return;
                     }
 
@@ -966,7 +969,7 @@ window.addEventListener("load", async function(event) {
 
                 addOfficeSubmit.addEventListener("click", async function(e) {
                     if(eventsWait) {
-                        showInformation("يجب عليك الإنتظار قليلًا", "warning");
+                        showNotification("يجب عليك الإنتظار قليلًا", "warning");
                         return;
                     }
 
@@ -1067,16 +1070,19 @@ window.addEventListener("load", async function(event) {
                         floorNumber = (parseInt(floorNumber, 10) - 1) + "";
                         tempOffice.addEventListener("click", async function(e) {
                             if(eventsWait) {
-                                showInformation("يجب عليك الإنتظار قليلًا", "warning");
+                                showNotification("يجب عليك الإنتظار قليلًا", "warning");
                                 return;
                             }
 
                             eventsWait = true;
                             let officeResp = await fetch("/map/office/" + getFloorByText(tempOffice.parentElement.id) + "/"+ tempOffice.innerHTML);
                             officeResp = await officeResp.json();
-                            eventsWait = false;
         
-                            if(officeResp.error) return;
+                            if(officeResp.error) {
+                                showNotification("حدث خطأ", "failed");
+                                eventsWait = false;
+                                return;
+                            }
         
                             showInformation(tempOffice.innerHTML, officeResp.teacher, officeResp.maintenance, tempOffice.getAttribute("data-hidden"), getFloorByText(tempOffice.parentElement.id));
                         });
@@ -1347,7 +1353,7 @@ window.addEventListener("load", async function(event) {
                     loginContainer.style["pointer-events"] = buttonsNav[2].classList.contains("active") ? "auto" : "none";
                 } else { // Logout
                     if(eventsWait) {
-                        showInformation("يجب عليك الإنتظار قليلًا", "warning");
+                        showNotification("يجب عليك الإنتظار قليلًا", "warning");
                         return;
                     }
 

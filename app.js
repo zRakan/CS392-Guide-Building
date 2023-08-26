@@ -11,8 +11,9 @@ import ejs from "ejs"
     import dotenv from "dotenv";
     dotenv.config();
 
-// HTTPS
+// HTTPS & Logging
     import https from "https";
+    import { logger } from "./logger.js";
 
 // fs
     import fs from "fs";
@@ -36,6 +37,7 @@ const app = express();
     app.use(bodyParser.json());
     app.use(bodyParser.urlencoded({ extended: true })); 
     app.use(cookieParser());
+    app.use(logger); // Logging middleware
     
     let sessionConfig = {
         name: "cookie",

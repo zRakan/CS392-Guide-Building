@@ -28,11 +28,14 @@
     "express-minify": "^1.0.0",
     "express-rate-limit": "^6.7.0",
     "express-session": "^1.17.3",
+    "morgan": "^1.10.0",
     "nodemon": "^2.0.22",
     "path": "^0.12.7",
-    "prompts": "^2.4.2"
+    "prompts": "^2.4.2",
+    "winston": "^3.9.0"
   },
   "devDependencies": {
+    "@types/morgan": "^1.9.5",
     "eslint": "^8.41.0",
     "eslint-config-google": "^0.14.0",
     "eslint-config-standard": "^17.0.0",

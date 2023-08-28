@@ -5,7 +5,8 @@
   "description": "CS392's Project, guide map for students",
   "main": "app.js",
   "scripts": {
-    "app": "npx nodemon app.js"
+    "development": "npx nodemon app.js",
+    "production": "set NODE_ENV=production&& node app.js"
   },
   "repository": {
     "type": "git",

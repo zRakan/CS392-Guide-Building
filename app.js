@@ -52,7 +52,8 @@ const app = express();
     }
 
     // Environment is Production
-        if(process.env.ENVIRONMENT == "production") {
+        if(process.env.NODE_ENV == "production") {
+            console.log("Running on production")
             app.set('trust proxy', 1) // trust first proxy
             sessionConfig.cookie.secure = true;
         }
